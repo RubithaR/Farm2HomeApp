@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1015355975549",
+    "project_id": "final-43e89",
+    "storage_bucket": "final-43e89.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1015355975549:android:a4c6fbcc87a649d17d8e14",
+        "android_client_info": {
+          "package_name": "com.example.veg"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6_j9jw9M_LPRZx-2j1cpw951pQBceAk4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
