@@ -1,3 +1,5 @@
+
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/authentication/auth.dart';
@@ -11,13 +13,13 @@ class SignUpScreenSeller extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreenSeller> {
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController _firstnamecontroller = TextEditingController();
   final TextEditingController _secondnamecontroller = TextEditingController();
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
   final TextEditingController _phonecontroller = TextEditingController();
-
   @override
   void dispose() {
     _firstnamecontroller.dispose();
@@ -27,6 +29,19 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
     _phonecontroller.dispose();
     super.dispose();
   }
+
+  // checkIfNetworkIsAvailable()
+  // {
+  //  cMethods.checkConnectivity(context);
+  // }
+  /*signUpValidation()
+  {
+    if(_firstnamecontroller.text.trim().length < 3)
+    {
+      cMethods.displaySnackBar("wrong", context);
+    }
+  }*/
+
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +57,7 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
           onTap: () => FocusScope.of(context).unfocus(),
           child: SingleChildScrollView(
             child: Form(
+              key: formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
@@ -62,6 +78,13 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
                       child: Column(
                         children: <Widget>[
                           TextFormField(
+                            validator: (firstName) {
+                              if (firstName!.isEmpty) {
+                                return "Please Enter first name";
+                              }
+                              return null;
+
+                            },
                             controller: _firstnamecontroller,
                             decoration: const InputDecoration(
                                 prefixIcon: Icon(Icons.people_alt_outlined),
@@ -76,6 +99,13 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
                             height: 20.0,
                           ),
                           TextFormField(
+                            validator: (secondName){
+                              if (secondName!.isEmpty) {
+                                return "Please Enter Second name";
+                              }
+                              return null;
+
+                            },
                             controller: _secondnamecontroller,
                             decoration: const InputDecoration(
                                 prefixIcon: Icon(Icons.people_alt_outlined),
@@ -91,6 +121,14 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
                           ),
                           TextFormField(
                             controller: _phonecontroller,
+                            validator: (pNumber) {
+                              if (pNumber!.isEmpty) {
+                                return "Please Enter phone number";
+                              } else if (pNumber.length == 9 ) {
+                                return "Please Enter correct phone number";
+                              }
+                              return null;
+                            },
                             decoration: const InputDecoration(
                               prefixIcon: Icon(Icons.phone_android_outlined),
                               labelText: 'Phone No',
@@ -109,7 +147,7 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
                               if (email!.isEmpty) {
                                 return "Please Enter Email";
                               } else if (!RegExp(
-                                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                  r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
                                   .hasMatch(email)) {
                                 return "It's Not a valid Email";
                               }
@@ -158,11 +196,21 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
                             height: 43.0,
                             width: double.infinity,
                             child: ElevatedButton(
-                                onPressed: _signUp,
+                                onPressed: () {
+                                  if (formKey.currentState!.validate()) {
+                                    formKey.currentState!.save();
+                                    // checkIfNetworkIsAvailable();
+                                    registerNewUser();
+                                  }
+                                },
+                                style:  ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+
+                                ),
                                 child: const Text(
                                   'Sign Up',
                                   style: TextStyle(
-                                      fontSize: 20, color: Colors.grey),
+                                      fontSize: 20, color: Colors.white),
                                 )),
                           ),
                           const SizedBox(
@@ -202,24 +250,30 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
         ));
   }
 
-  void _signUp() async {
-    String firstname = _firstnamecontroller.text;
-    String secondname = _secondnamecontroller.text;
-    String email = _emailcontroller.text;
-    String password = _passwordcontroller.text;
-    String phone = _phonecontroller.text;
+  registerNewUser() async
+  {
+    final User? userFirebase = (
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailcontroller.text.trim(),
+          password: _passwordcontroller.text.trim(),
+        ).catchError((errorMsg)
+        {
+          // cMethods.displaySnackBar(errorMsg.toString(), context) ;
+        })
+    ).user ;
+    if(!context.mounted) return;
+    Navigator.pop(context);
+    DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(userFirebase!.uid);
+    Map userDataMap = {
+      "firstname" : _firstnamecontroller.text.trim(),
+      "secondname" : _secondnamecontroller.text.trim(),
+      "email" : _emailcontroller.text.trim(),
+      "password" : _passwordcontroller.text.trim(),
+      "phone" : _phonecontroller.text.trim(),
+      "role" : "Seller",
 
-    User? user = await _auth.signUpWithEmailAndPassword(email, password);
-    if (user != null) {
-      print("user is success");
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const LogInScreen(),
-        ),
-      );
-    } else {
-      print("some error happen");
-    }
+    };
+    usersRef.set(userDataMap);
+    Navigator.push(context, MaterialPageRoute(builder: (context) => LogInScreen()));
   }
 }

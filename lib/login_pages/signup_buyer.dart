@@ -1,11 +1,9 @@
-import 'dart:ffi';
 
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/authentication/auth.dart';
 import 'package:veg/login_pages/login.dart';
-import 'package:veg/methods/common_methods.dart';
-import 'package:veg/methods/loading_dialog.dart';
 
 class SignUpScreenBuyer extends StatefulWidget {
   const SignUpScreenBuyer({super.key});
@@ -22,7 +20,6 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
   final TextEditingController _phonecontroller = TextEditingController();
-  CommonMethods cMethods = CommonMethods();
   @override
   void dispose() {
     _firstnamecontroller.dispose();
@@ -33,10 +30,10 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
     super.dispose();
   }
   
-  checkIfNetworkIsAvailable()
-  {
-   cMethods.checkConnectivity(context);
-  }
+  // checkIfNetworkIsAvailable()
+  // {
+  //  cMethods.checkConnectivity(context);
+  // }
   /*signUpValidation()
   {
     if(_firstnamecontroller.text.trim().length < 3)
@@ -44,28 +41,7 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
       cMethods.displaySnackBar("wrong", context);
     }
   }*/
-  registerNewUser() async
-  {
-    showDialog(
-      context: context,
-      barrierDismissible: false ,
-      builder: (BuildContext context) => const LoadingDialog(messageText : "Registering your account....."),
 
-    ) ;
-    final User? userFirebase = (
-     await FirebaseAuth.instance.createUserWithEmailAndPassword(
-         email: _emailcontroller.text.trim(),
-         password: _passwordcontroller.text.trim(),
-     ).catchError((errorMsg)
-        {
-          cMethods.displaySnackBar(errorMsg.toString(), context) ;
-        })
-    ).user ;
-    if(!context.mounted) return;
-    Navigator.pop(context);
-    DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("users").chid
-
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -223,8 +199,8 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                                 onPressed: () {
                                   if (formKey.currentState!.validate()) {
                                     formKey.currentState!.save();
-                                    checkIfNetworkIsAvailable();
-                                    _signUp();
+                                    // checkIfNetworkIsAvailable();
+                                    registerNewUser();
                                   }
                                 },
                                  style:  ElevatedButton.styleFrom(
@@ -274,24 +250,30 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
         ));
   }
 
-  void _signUp() async {
-    String firstname = _firstnamecontroller.text;
-    String secondname = _secondnamecontroller.text;
-    String email = _emailcontroller.text;
-    String password = _passwordcontroller.text;
-    String  phone = _phonecontroller.text;
+  registerNewUser() async
+  {
+    final User? userFirebase = (
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailcontroller.text.trim(),
+          password: _passwordcontroller.text.trim(),
+        ).catchError((errorMsg)
+        {
+          // cMethods.displaySnackBar(errorMsg.toString(), context) ;
+        })
+    ).user ;
+    if(!context.mounted) return;
+    Navigator.pop(context);
+    DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(userFirebase!.uid);
+    Map userDataMap = {
+      "firstname" : _firstnamecontroller.text.trim(),
+      "secondname" : _secondnamecontroller.text.trim(),
+      "email" : _emailcontroller.text.trim(),
+      "password" : _passwordcontroller.text.trim(),
+      "phone" : _phonecontroller.text.trim(),
+      "Role" : "Buyer"
 
-    User? user = await _auth.signUpWithEmailAndPassword(email, password);
-    if (user != null) {
-      print("user is success");
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const LogInScreen(),
-        ),
-      );
-    } else {
-      print("some error happen");
-    }
+    };
+    usersRef.set(userDataMap);
+    Navigator.push(context, MaterialPageRoute(builder: (context) => LogInScreen()));
   }
 }

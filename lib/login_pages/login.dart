@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/buyerpages/homepage_buyer.dart';
 import 'package:veg/login_pages/forgetpassword.dart';
@@ -14,10 +15,27 @@ class LogInScreen extends StatefulWidget {
 }
 
 class _LogInScreenState extends State<LogInScreen> {
-  GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final FirebaseAuthService _auth = FirebaseAuthService();
+  final _formKey = GlobalKey<FormState>();
+  late String txtemail, txtpassword;
+  final _auth = FirebaseAuth.instance;
+  final dbRef = FirebaseDatabase.instance.reference().child("Users");
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
+
+
+  // void _signIn() async {
+  //   try{
+  //     final User? user = await _auth.signInWithEmailAndPassword(email: txtemail, password: txtpassword);
+  //     if(user != null){
+  //       final User? user = FirebaseAuth.instance.currentUser();
+  //       final userID = user.uid;
+  //     }else{
+  //       print('Fail');
+  //     }
+  //   }catch(e){
+  //     print(e);
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -44,7 +62,7 @@ class _LogInScreenState extends State<LogInScreen> {
           onTap: () => FocusScope.of(context).unfocus(),
           child: SingleChildScrollView(
             child: Form(
-              key: formKey,
+              key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
@@ -152,9 +170,9 @@ class _LogInScreenState extends State<LogInScreen> {
                             width: double.infinity,
                             child: ElevatedButton(
                                 onPressed: () {
-                                  if (formKey.currentState!.validate()) {
-                                    formKey.currentState!.save();
-                                    _signIn();
+                                  if (_formKey.currentState!.validate()) {
+                                    _formKey.currentState!.save();
+                                    // _signIn();
                                   }
                                 },
                                 style:  ElevatedButton.styleFrom(
@@ -235,21 +253,4 @@ class _LogInScreenState extends State<LogInScreen> {
         ));
   }
 
-  void _signIn() async {
-    String email = _emailcontroller.text;
-    String password = _passwordcontroller.text;
-
-    User? user = await _auth.signInWithEmailAndPassword(email, password);
-    if (user != null) {
-      print("user is success signin");
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const HomePageBuyer(),
-        ),
-      );
-    } else {
-      print("some error happen");
-    }
-  }
 }
