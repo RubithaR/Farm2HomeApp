@@ -39,6 +39,7 @@ dependencies:
   firebase_auth: ^4.19.5
   google_maps_flutter: ^2.6.1
   geolocator: ^8.2.1
+  connectivity_plus: ^6.0.3
 
 
 dev_dependencies:
@@ -67,7 +68,6 @@ flutter:
   assets:
    - assets/images/
    - assets/images/buyer_homepage/
-   - assets/images/seller_homepage/
 
 
 

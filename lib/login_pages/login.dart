@@ -15,8 +15,6 @@ class LogInScreen extends StatefulWidget {
 
 class _LogInScreenState extends State<LogInScreen> {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final String _email = '';
-  final String _password = '';
   final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
@@ -159,10 +157,14 @@ class _LogInScreenState extends State<LogInScreen> {
                                     _signIn();
                                   }
                                 },
+                                style:  ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+
+                                ),
                                 child: const Text(
                                   'Log In',
                                   style: TextStyle(
-                                      fontSize: 20, color: Colors.grey),
+                                      fontSize: 20, color: Colors.white),
                                 )),
                           ),
                           const SizedBox(

@@ -1,7 +1,11 @@
+import 'dart:ffi';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/authentication/auth.dart';
 import 'package:veg/login_pages/login.dart';
+import 'package:veg/methods/common_methods.dart';
+import 'package:veg/methods/loading_dialog.dart';
 
 class SignUpScreenBuyer extends StatefulWidget {
   const SignUpScreenBuyer({super.key});
@@ -11,13 +15,14 @@ class SignUpScreenBuyer extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreenBuyer> {
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController _firstnamecontroller = TextEditingController();
   final TextEditingController _secondnamecontroller = TextEditingController();
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
   final TextEditingController _phonecontroller = TextEditingController();
-
+  CommonMethods cMethods = CommonMethods();
   @override
   void dispose() {
     _firstnamecontroller.dispose();
@@ -26,6 +31,40 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
     _passwordcontroller.dispose();
     _phonecontroller.dispose();
     super.dispose();
+  }
+  
+  checkIfNetworkIsAvailable()
+  {
+   cMethods.checkConnectivity(context);
+  }
+  /*signUpValidation()
+  {
+    if(_firstnamecontroller.text.trim().length < 3)
+    {
+      cMethods.displaySnackBar("wrong", context);
+    }
+  }*/
+  registerNewUser() async
+  {
+    showDialog(
+      context: context,
+      barrierDismissible: false ,
+      builder: (BuildContext context) => const LoadingDialog(messageText : "Registering your account....."),
+
+    ) ;
+    final User? userFirebase = (
+     await FirebaseAuth.instance.createUserWithEmailAndPassword(
+         email: _emailcontroller.text.trim(),
+         password: _passwordcontroller.text.trim(),
+     ).catchError((errorMsg)
+        {
+          cMethods.displaySnackBar(errorMsg.toString(), context) ;
+        })
+    ).user ;
+    if(!context.mounted) return;
+    Navigator.pop(context);
+    DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("users").chid
+
   }
 
   @override
@@ -42,6 +81,7 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
           onTap: () => FocusScope.of(context).unfocus(),
           child: SingleChildScrollView(
             child: Form(
+              key: formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
@@ -62,6 +102,13 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                       child: Column(
                         children: <Widget>[
                           TextFormField(
+                            validator: (firstName) {
+                              if (firstName!.isEmpty) {
+                                return "Please Enter first name";
+                              }
+                                return null;
+
+                            },
                             controller: _firstnamecontroller,
                             decoration: const InputDecoration(
                                 prefixIcon: Icon(Icons.people_alt_outlined),
@@ -76,6 +123,13 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                             height: 20.0,
                           ),
                           TextFormField(
+                            validator: (secondName){
+                              if (secondName!.isEmpty) {
+                                return "Please Enter Second name";
+                              }
+                                return null;
+
+                            },
                             controller: _secondnamecontroller,
                             decoration: const InputDecoration(
                                 prefixIcon: Icon(Icons.people_alt_outlined),
@@ -91,6 +145,14 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                           ),
                           TextFormField(
                             controller: _phonecontroller,
+                            validator: (pNumber) {
+                              if (pNumber!.isEmpty) {
+                                return "Please Enter phone number";
+                              } else if (pNumber.length == 9 ) {
+                                return "Please Enter correct phone number";
+                              }
+                              return null;
+                            },
                             decoration: const InputDecoration(
                               prefixIcon: Icon(Icons.phone_android_outlined),
                               labelText: 'Phone No',
@@ -158,33 +220,43 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                             height: 43.0,
                             width: double.infinity,
                             child: ElevatedButton(
-                                onPressed: _signUp,
-                                child: const Text(
+                                onPressed: () {
+                                  if (formKey.currentState!.validate()) {
+                                    formKey.currentState!.save();
+                                    checkIfNetworkIsAvailable();
+                                    _signUp();
+                                  }
+                                },
+                                 style:  ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+
+                                   ),
+                                  child: const Text(
                                   'Sign Up',
                                   style: TextStyle(
-                                      fontSize: 20, color: Colors.grey),
-                                )),
-                          ),
-                          const SizedBox(
-                            height: 20.0,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              const Text(
-                                "Already have an Account?",
-                                style: TextStyle(fontSize: 15),
-                              ),
-                              TextButton(
-                                onPressed: () {
+                                  fontSize: 20, color: Colors.white),
+                                  )),
+                                  ),
+                                  const SizedBox(
+                                  height: 20.0,
+                                  ),
+                                  Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: <Widget>[
+                                  const Text(
+                                  "Already have an Account?",
+                                  style: TextStyle(fontSize: 15),
+                                  ),
+                                  TextButton(
+                                  onPressed: () {
                                   Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const LogInScreen(),
-                                    ),
+                                  context,
+                                  MaterialPageRoute(
+                                  builder: (context) => const LogInScreen(),
+                                  ),
                                   );
-                                },
-                                child: const Text(
+                                  },
+                                  child: const Text(
                                   "Log In",
                                   style: TextStyle(
                                       fontSize: 15,
@@ -207,7 +279,7 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
     String secondname = _secondnamecontroller.text;
     String email = _emailcontroller.text;
     String password = _passwordcontroller.text;
-    String phone = _phonecontroller.text;
+    String  phone = _phonecontroller.text;
 
     User? user = await _auth.signUpWithEmailAndPassword(email, password);
     if (user != null) {
