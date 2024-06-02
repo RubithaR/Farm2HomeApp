@@ -1,7 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:veg/buyerpages/homepage_buyer.dart';
 import 'package:veg/firebase_options.dart';
 import 'package:veg/login_pages/login.dart';
+import 'package:veg/sellerpages/homepage_seller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +19,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: LogInScreen(),
+      home: HomePageSeller(),
     );
   }
 }

@@ -48,21 +48,18 @@ class _HomePageState extends State<HomePageBuyer> {
                 child: Row(children: [
                   const Icon(CupertinoIcons.search, color: Colors.green,
                   ),
-                  SizedBox(
-                    height: 50,width: 300,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                      ),
-                      child: TextFormField(
-                        decoration: const InputDecoration(
-                          hintText: "What would you like to buy?",
-                          border: InputBorder.none,
-                        ),
+                  const SizedBox(
+                    height: 20,) ,
+                  Expanded(
+                    child: TextFormField(
+                      decoration: const InputDecoration(
+                        hintText: "What would you like to buy?",
+                        border: InputBorder.none,
                       ),
                     ),
                   ),
-                  const Padding(padding: EdgeInsets.only(left: 15),),
+                  const SizedBox(width: 10),
+
                   const Icon(Icons.filter_list, color: Colors.green,),
                 ],),
               ),
