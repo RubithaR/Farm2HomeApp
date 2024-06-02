@@ -158,23 +158,6 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                           const SizedBox(
                             height: 20.0,
                           ),
-                          TextFormField(
-                            validator: (secondName) {
-                              if (secondName!.isEmpty) {
-                                return "Please Enter Second name";
-                              }
-                              return null;
-                            },
-                            controller: _secondnamecontroller,
-                            decoration: const InputDecoration(
-                                prefixIcon: Icon(Icons.people_alt_outlined),
-                                labelText: 'Second Name',
-                                labelStyle: TextStyle(fontSize: 20),
-                                hintText: 'Second Name',
-                                border: OutlineInputBorder()),
-                            keyboardType: TextInputType.text,
-                            autocorrect: true,
-                          ),
                           const SizedBox(
                             height: 20.0,
                           ),
@@ -183,7 +166,7 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                             validator: (pNumber) {
                               if (pNumber!.isEmpty) {
                                 return "Please Enter phone number";
-                              } else if (pNumber.length == 9) {
+                              } else if (pNumber.length != 10) {
                                 return "Please Enter correct phone number";
                               }
                               return null;
