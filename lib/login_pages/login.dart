@@ -5,8 +5,8 @@ import 'package:veg/login_pages/forgetpassword.dart';
 import 'package:veg/login_pages/signup_buyer.dart';
 import 'package:veg/login_pages/signup_seller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:veg/sellerpages/homepage_seller.dart';
 
-import '../authentication/auth.dart';
 
 class LogInScreen extends StatefulWidget {
   const LogInScreen({super.key});
@@ -16,26 +16,66 @@ class LogInScreen extends StatefulWidget {
 
 class _LogInScreenState extends State<LogInScreen> {
   final _formKey = GlobalKey<FormState>();
-  late String txtemail, txtpassword;
   final _auth = FirebaseAuth.instance;
-  final dbRef = FirebaseDatabase.instance.reference().child("Users");
+  final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref("Users");
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
 
 
-  // void _signIn() async {
-  //   try{
-  //     final User? user = await _auth.signInWithEmailAndPassword(email: txtemail, password: txtpassword);
-  //     if(user != null){
-  //       final User? user = FirebaseAuth.instance.currentUser();
-  //       final userID = user.uid;
-  //     }else{
-  //       print('Fail');
-  //     }
-  //   }catch(e){
-  //     print(e);
-  //   }
-  // }
+  void _signIn() async {
+    try {
+      UserCredential newUser = await _auth.signInWithEmailAndPassword(
+        email: _emailcontroller.text,
+        password: _passwordcontroller.text,
+      );
+      if (newUser != null) {
+        User? user = _auth.currentUser;
+        String? userId = user?.uid;
+        print('User ID: $userId');
+        if (userId != null) {
+          print('Hi1');
+
+
+          DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(userId);
+          DatabaseEvent event;
+          try {
+            event = await userRef.once();
+          } catch (e) {
+            print('Error fetching data: $e');
+            return;
+          }
+          print('Snapshot: ${event.snapshot.value}');
+          if (event.snapshot.exists) {
+            print('Hi2');
+            Map<dynamic, dynamic>? userData = event.snapshot.value as Map<dynamic, dynamic>?;
+            if (userData != null) {
+              print('User Data: $userData');
+              setState(() {
+                if (userData['role'] == 'Buyer') {
+                  print('Hi3');
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => HomePageBuyer()));
+                } else if (userData['role'] == 'Seller') {
+                  print('Hi4');
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => HomePageSeller()));
+                }
+              });
+            } else {
+              print('User data is null');
+            }
+          } else {
+            print('No data found for this user');
+          }
+        } else {
+          print('User ID is null');
+        }
+      } else {
+        print('UserCredential is null');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
 
   @override
   void dispose() {
@@ -172,7 +212,7 @@ class _LogInScreenState extends State<LogInScreen> {
                                 onPressed: () {
                                   if (_formKey.currentState!.validate()) {
                                     _formKey.currentState!.save();
-                                    // _signIn();
+                                    _signIn();
                                   }
                                 },
                                 style:  ElevatedButton.styleFrom(

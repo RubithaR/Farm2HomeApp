@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
 
 final FirebaseStorage _storage = FirebaseStorage.instance;
 final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -16,18 +15,20 @@ class StoreData {
   }
 
   Future<String> saveData({
-    required String FirstName,
+    required String firstName,
     required String secondName,
     required Uint8List file,
+    required String uid,
   }) async {
     String resp = " Some Error Occurred";
     try {
-      if (FirstName.isNotEmpty || secondName.isNotEmpty) {
-        String imageUrl = await uploadImageToStorage('profileImage', file);
-        await _firestore.collection('userProfile').add({
-          'FirstName': FirstName,
+      if (firstName.isNotEmpty && secondName.isNotEmpty) {
+        String imageUrl = await uploadImageToStorage('profileImage/$uid', file);
+        await _firestore.collection('userProfile').doc(uid).set({
+          'firstName': firstName,
           'secondName': secondName,
           'imageLink': imageUrl,
+          'uid': uid,
         });
 
         resp = 'success';

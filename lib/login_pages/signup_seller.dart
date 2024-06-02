@@ -255,11 +255,11 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
     final User? userFirebase = (
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailcontroller.text.trim(),
-          password: _passwordcontroller.text.trim(),
-        ).catchError((errorMsg)
-        {
-          // cMethods.displaySnackBar(errorMsg.toString(), context) ;
-        })
+          password: _passwordcontroller.text.trim(),)
+        // ).catchError((errorMsg)
+        // {
+        //   cMethods.displaySnackBar(errorMsg.toString(), context) ;
+        // })
     ).user ;
     if(!context.mounted) return;
     Navigator.pop(context);
