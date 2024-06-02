@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/sellerpages/categories/fruits_two.dart';
 import 'package:veg/sellerpages/categories/vegetable_one.dart';
+
 class Categories extends StatefulWidget {
   const Categories({super.key});
 
@@ -13,12 +14,13 @@ class _CategoriesState extends State<Categories> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        title: const Text('Categories',
-          style: TextStyle(fontSize: 20 , color: Colors.white),
+        appBar: AppBar(
+          backgroundColor: Colors.green,
+          title: const Text(
+            'Categories',
+            style: TextStyle(fontSize: 20, color: Colors.white),
+          ),
         ),
-      ),
         body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
@@ -67,7 +69,7 @@ class _CategoriesState extends State<Categories> {
                 ),
                 Padding(
                   padding:
-                  const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                      const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
                   child: Column(
                     children: [
                       Container(
@@ -93,7 +95,8 @@ class _CategoriesState extends State<Categories> {
                                   'assets/images/seller_image/vegetables.jpeg',
                                   width: 110, // Adjust width as needed
                                   height: 110, // Adjust height as needed
-                                  fit: BoxFit.contain, // Ensures the image scales properly
+                                  fit: BoxFit
+                                      .contain, // Ensures the image scales properly
                                 ),
                               ),
                               const SizedBox(width: 20),
@@ -106,16 +109,14 @@ class _CategoriesState extends State<Categories> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-
-
                               FloatingActionButton(
-                                heroTag: 'veg',
+                                  heroTag: 'veg',
                                   onPressed: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                        const VegetableOne(),
+                                            const VegetableOne(),
                                       ),
                                     );
                                   },
@@ -133,7 +134,7 @@ class _CategoriesState extends State<Categories> {
                 ),
                 Padding(
                   padding:
-                  const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                      const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
                   child: Column(
                     children: [
                       Container(
@@ -159,7 +160,8 @@ class _CategoriesState extends State<Categories> {
                                   'assets/images/seller_image/fruits.jpeg',
                                   width: 110, // Adjust width as needed
                                   height: 110, // Adjust height as needed
-                                  fit: BoxFit.contain, // Ensures the image scales properly
+                                  fit: BoxFit
+                                      .contain, // Ensures the image scales properly
                                 ),
                               ),
                               const SizedBox(width: 20),
@@ -172,16 +174,13 @@ class _CategoriesState extends State<Categories> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-
-
                               FloatingActionButton(
-                                heroTag: 'fruits',
+                                  heroTag: 'fruits',
                                   onPressed: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                        const Fruits(),
+                                        builder: (context) => const Fruits(),
                                       ),
                                     );
                                   },
@@ -199,7 +198,7 @@ class _CategoriesState extends State<Categories> {
                 ),
                 Padding(
                   padding:
-                  const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                      const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
                   child: Column(
                     children: [
                       Container(
@@ -222,27 +221,27 @@ class _CategoriesState extends State<Categories> {
                             children: [
                               Flexible(
                                 child: Image.asset(
-                                  'assets/images/seller_image/vegetables.jpeg',
+                                  'assets/images/seller_image/grains.jpeg',
                                   width: 110, // Adjust width as needed
                                   height: 110, // Adjust height as needed
-                                  fit: BoxFit.contain, // Ensures the image scales properly
+                                  fit: BoxFit
+                                      .contain, // Ensures the image scales properly
                                 ),
                               ),
                               const SizedBox(width: 20),
                               Expanded(
                                 child: TextFormField(
                                   decoration: const InputDecoration(
-                                    hintText: "Fruits",
+                                    hintText: "Grains",
                                     border: InputBorder.none,
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 10),
-
-
                               const FloatingActionButton(
-                                heroTag: null,
-                                  onPressed: (null) /*{
+                                  heroTag: null,
+                                  onPressed:
+                                      (null) /*{
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -250,7 +249,8 @@ class _CategoriesState extends State<Categories> {
                                         const Categories(),
                                       ),
                                     );
-                                  }*/,
+                                  }*/
+                                  ,
                                   backgroundColor: Colors.green,
                                   child: Icon(
                                     Icons.add,
@@ -266,7 +266,6 @@ class _CategoriesState extends State<Categories> {
               ],
             ),
           ),
-        )
-    );
+        ));
   }
 }

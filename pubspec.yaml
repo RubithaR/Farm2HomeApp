@@ -72,6 +72,8 @@ flutter:
   assets:
    - assets/images/
    - assets/images/buyer_homepage/
+   - assets/images/seller_image/Fruits/
+   - assets/images/seller_image/Vegetables/
    - assets/images/seller_image/
 
 
