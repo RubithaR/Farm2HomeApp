@@ -45,9 +45,24 @@ class CoffeeTile extends StatelessWidget{
           height: 180,
           fit: BoxFit.cover,
         ),
-        trailing: IconButton(
-          icon: icon,
-          onPressed: onPressed,
+        trailing: Container(
+          decoration: BoxDecoration(
+            color: Colors.green, // Background color of the button
+            borderRadius: BorderRadius.circular(8), // Rounded corners
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5), // Shadow color
+                spreadRadius: 2, // Spread radius
+                blurRadius: 5, // Blur radius
+                offset: Offset(0, 3), // Shadow offset
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: icon,
+            onPressed: onPressed,
+            color: Colors.white, // Icon color
+          ),
         ),
       ),
     );
