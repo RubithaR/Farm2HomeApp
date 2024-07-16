@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:veg/buyerpages/AfterCartConfirm.dart';
 import 'package:veg/buyerpages/Cart/coffee_tile.dart';
 import 'package:veg/buyerpages/Cart/model.dart';
 import 'package:veg/buyerpages/Cart/model_cart.dart';
+import 'package:veg/buyerpages/homepage_buyer.dart';
 
-class CartPage extends StatefulWidget{
-  const CartPage({super.key});
+class CartPage extends StatefulWidget {
+  const CartPage({Key? key}) : super(key: key);
 
   @override
   State<CartPage> createState() => _CartPageState();
 }
 
-class _CartPageState extends State<CartPage>{
-
-  //remove cart item
-  void removeFromCart(CartModel cartModel){
-    Provider.of<ModelCartUse>(context, listen: false).removeItemFromCart(cartModel);
+class _CartPageState extends State<CartPage> {
+  // Remove cart item
+  void removeFromCart(CartModel cartModel) {
+    Provider.of<ModelCartUse>(context, listen: false)
+        .removeItemFromCart(cartModel);
 
     final snackBar = SnackBar(
       content: Text('Successfully removed from the cart'),
@@ -26,30 +28,68 @@ class _CartPageState extends State<CartPage>{
   }
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return Consumer<ModelCartUse>(
-      builder: (context, value, child) =>     SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(25.0),
-            child: Column(
-              children: [Text('Your Cart', style: TextStyle(fontSize: 20),),
+      builder: (context, value, child) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(25.0),
+          child: Column(
+            children: [
+              Text(
+                'Your Cart',
+                style: TextStyle(fontSize: 20),
+              ),
+              SizedBox(height: 20),
+              // List of cart items
+              Expanded(
+                child: ListView.builder(
+                  itemCount: value.userCart.length,
+                  itemBuilder: (context, index) {
+                    // Get individual cart item
+                    CartModel eachModel = value.userCart[index];
 
-                //list of cart items
-                Expanded(child: ListView.builder(itemCount: value.userCart.length, itemBuilder: (context, index){
-                  //get individual
-                  CartModel eachmodel = value.userCart[index];
-
-                  //return the coffee tile
-                  return CoffeeTile(cartModel: eachmodel, onPressed: () => removeFromCart(eachmodel), icon: Icon(Icons.delete),);
-                }
-                ),)
-              ],
-
-
-            ),
-          )
+                    // Return the coffee tile
+                    return CoffeeTile(
+                      cartModel: eachModel,
+                      onPressed: () => removeFromCart(eachModel),
+                      icon: Icon(Icons.delete),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: 20),
+              // Buttons to navigate to other pages
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HomePageBuyer(),
+                        ),
+                      );
+                    },
+                    child: Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Aftercartconfirm(),
+                        ),
+                      );
+                    },
+                    child: Text('Confirm'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
-
   }
 }
