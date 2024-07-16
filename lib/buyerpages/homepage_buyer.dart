@@ -94,14 +94,7 @@ class _HomePageState extends State<HomePageBuyer> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: (){
-                    // _getCurrentLocation().then((value){
-                    //   lat = '${value.latitude}';
-                    //   long = '${value.longitude}';
-                    // });
-                    // _liveLocation();
-                    // _openMap(lat,long);
-                  },
+                  onTap: (){},
                   child : Container(
                     padding: const EdgeInsets.only(top: 1, left: 6, right: 6, bottom: 1),
                     decoration: BoxDecoration(
@@ -119,20 +112,36 @@ class _HomePageState extends State<HomePageBuyer> {
                     ),
                     child: Material(
                       color: Colors.white,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(10),
-                        splashColor: Colors.green,
-                        child: Column(
-                          children: [
-                            Ink.image(
-                              image: const AssetImage('assets/images/buyer_homepage/vegetables.jpeg'),
-                              height: 150,
-                              width: 150,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MapPage(),
                             ),
-                            const Text('My Location',
-                              style: TextStyle(fontSize: 20, color: Colors.green),),
-                            const SizedBox(height: 6),
-
+                          );
+                        },
+                        style: ButtonStyle(
+                          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(color: Colors.green), // Optional border side
+                            ),
+                          ),
+                          overlayColor: WidgetStateColor.resolveWith((states) => Colors.green.withOpacity(0.2)), // Splash color
+                        ),
+                        child: const Column(
+                          children: [
+                            Image(
+                              image: AssetImage('assets/images/buyer_homepage/vegetables.jpeg'),
+                              height: 140,
+                              width: 125,
+                            ),
+                            Text(
+                              'Random Buy',
+                              style: TextStyle(fontSize: 20, color: Colors.green),
+                            ),
+                            SizedBox(height: 6),
                           ],
                         ),
                       ),
@@ -185,7 +194,7 @@ class _HomePageState extends State<HomePageBuyer> {
                               width: 125,
                             ),
                             Text(
-                              'Buy Now',
+                              'My Cart',
                               style: TextStyle(fontSize: 20, color: Colors.green),
                             ),
                             SizedBox(height: 6),
