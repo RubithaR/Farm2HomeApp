@@ -1,21 +1,22 @@
 {
   "project_info": {
-    "project_number": "1015355975549",
-    "project_id": "final-43e89",
-    "storage_bucket": "final-43e89.appspot.com"
+    "project_number": "881238033694",
+    "firebase_url": "https://farm2home-bfb60-default-rtdb.firebaseio.com",
+    "project_id": "farm2home-bfb60",
+    "storage_bucket": "farm2home-bfb60.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1015355975549:android:a4c6fbcc87a649d17d8e14",
+        "mobilesdk_app_id": "1:881238033694:android:bd37d29e4ecee0d5c4350f",
         "android_client_info": {
-          "package_name": "com.example.veg"
+          "package_name": "com.example.farm_home"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB6_j9jw9M_LPRZx-2j1cpw951pQBceAk4"
+          "current_key": "AIzaSyA9GskZpUFgljTermxTw-HVE3O6g_GtlIc"
         }
       ],
       "services": {

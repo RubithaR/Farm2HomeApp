@@ -1,8 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:veg/buyerpages/Cart/addcart_additem.dart';
+import 'package:veg/buyerpages/Cart/model_cart.dart';
 import 'package:veg/googlemapscreens/current_location_screen.dart';
 import '../buyerpages/Widgets/appbarwidget.dart';
 import '../buyerpages/Widgets/categorieswidget.dart';
+
+
 
 class HomePageBuyer extends StatefulWidget{
   const HomePageBuyer({super.key});
@@ -12,8 +16,10 @@ class HomePageBuyer extends StatefulWidget{
 }
 
 class _HomePageState extends State<HomePageBuyer> {
+
   @override
   Widget build(BuildContext context){
+
     return Scaffold(
       body: ListView(
         children: [
@@ -89,7 +95,12 @@ class _HomePageState extends State<HomePageBuyer> {
               children: [
                 GestureDetector(
                   onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const CurrentLocationScreen()));
+                    // _getCurrentLocation().then((value){
+                    //   lat = '${value.latitude}';
+                    //   long = '${value.longitude}';
+                    // });
+                    // _liveLocation();
+                    // _openMap(lat,long);
                   },
                   child : Container(
                     padding: const EdgeInsets.only(top: 1, left: 6, right: 6, bottom: 1),
@@ -118,7 +129,7 @@ class _HomePageState extends State<HomePageBuyer> {
                               height: 150,
                               width: 150,
                             ),
-                            const Text('Find Nearby \n     Sellers',
+                            const Text('My Location',
                               style: TextStyle(fontSize: 20, color: Colors.green),),
                             const SizedBox(height: 6),
 
@@ -148,20 +159,36 @@ class _HomePageState extends State<HomePageBuyer> {
                     ),
                     child: Material(
                       color: Colors.white,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(10),
-                        splashColor: Colors.green,
-                        child: Column(
-                          children: [
-                            Ink.image(
-                              image: const AssetImage('assets/images/buyer_homepage/vegetables.jpeg'),
-                              height: 150,
-                              width: 150,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CartHomePage(),
                             ),
-                            const Text('My Location',
-                              style: TextStyle(fontSize: 20, color: Colors.green),),
-                            const SizedBox(height: 6),
-
+                          );
+                        },
+                        style: ButtonStyle(
+                          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(color: Colors.green), // Optional border side
+                            ),
+                          ),
+                          overlayColor: WidgetStateColor.resolveWith((states) => Colors.green.withOpacity(0.2)), // Splash color
+                        ),
+                        child: const Column(
+                          children: [
+                            Image(
+                              image: AssetImage('assets/images/buyer_homepage/vegetables.jpeg'),
+                              height: 140,
+                              width: 125,
+                            ),
+                            Text(
+                              'Buy Now',
+                              style: TextStyle(fontSize: 20, color: Colors.green),
+                            ),
+                            SizedBox(height: 6),
                           ],
                         ),
                       ),
@@ -173,7 +200,7 @@ class _HomePageState extends State<HomePageBuyer> {
           ),
 
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+            padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 30),
             child: Row(
               children: [
                 GestureDetector(
@@ -195,20 +222,36 @@ class _HomePageState extends State<HomePageBuyer> {
                     ),
                     child: Material(
                       color: Colors.white,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(10),
-                        splashColor: Colors.green,
-                        child: Column(
-                          children: [
-                            Ink.image(
-                              image: const AssetImage('assets/images/buyer_homepage/vegetables.jpeg'),
-                              height: 150,
-                              width: 150,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MapPage(),
                             ),
-                            const Text('My Location',
-                              style: TextStyle(fontSize: 20, color: Colors.green),),
-                            const SizedBox(height: 6),
-
+                          );
+                        },
+                        style: ButtonStyle(
+                          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(color: Colors.green), // Optional border side
+                            ),
+                          ),
+                          overlayColor: WidgetStateColor.resolveWith((states) => Colors.green.withOpacity(0.2)), // Splash color
+                        ),
+                        child: const Column(
+                          children: [
+                            Image(
+                              image: AssetImage('assets/images/buyer_homepage/vegetables.jpeg'),
+                              height: 140,
+                              width: 125,
+                            ),
+                            Text(
+                              'My Location',
+                              style: TextStyle(fontSize: 20, color: Colors.green),
+                            ),
+                            SizedBox(height: 6),
                           ],
                         ),
                       ),

@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyAeKF8Wy6P4ISQb37c9UMirMXpJGHzXkx8</string>
+	<string>AIzaSyAyQ4rvmeNa17xKFD-g7SA7K4ktwf6qmlI</string>
 	<key>GCM_SENDER_ID</key>
-	<string>550663231705</string>
+	<string>881238033694</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.veg</string>
+	<string>com.example.farmHome</string>
 	<key>PROJECT_ID</key>
-	<string>project-a221d</string>
+	<string>farm2home-bfb60</string>
 	<key>STORAGE_BUCKET</key>
-	<string>project-a221d.appspot.com</string>
+	<string>farm2home-bfb60.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,8 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:550663231705:ios:61d7f6bf1c7533262986c8</string>
+	<string>1:881238033694:ios:e150f75f8b8852acc4350f</string>
+	<key>DATABASE_URL</key>
+	<string>https://farm2home-bfb60-default-rtdb.firebaseio.com</string>
 </dict>
 </plist>

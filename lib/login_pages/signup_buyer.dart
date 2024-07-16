@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:veg/login_pages/login.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:veg/authentication/auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,12 +24,23 @@ class SignUpScreenBuyer extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreenBuyer> {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController _firstnamecontroller = TextEditingController();
   final TextEditingController _secondnamecontroller = TextEditingController();
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
   final TextEditingController _phonecontroller = TextEditingController();
   Uint8List? _image;
+
+  @override
+  void dispose() {
+    _firstnamecontroller.dispose();
+    _secondnamecontroller.dispose();
+    _emailcontroller.dispose();
+    _passwordcontroller.dispose();
+    _phonecontroller.dispose();
+    super.dispose();
+  }
 
   Future<void> registerNewUser() async {
     try {
@@ -36,23 +49,43 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
         password: _passwordcontroller.text.trim(),
       )).user;
 
-      if (userFirebase != null) {
-        String uid = userFirebase.uid;
-        String imageUrl = await uploadImageToStorage('profileImage/$uid', _image!);
-        await saveData(
-          firstName: _firstnamecontroller.text.trim(),
-          secondName: _secondnamecontroller.text.trim(),
-          imageUrl: imageUrl,
-          uid: uid,
-        );
+      if (!context.mounted) return;
+      Navigator.pop(context);
+      DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(userFirebase!.uid);
+      Map userDataMap = {
+        "firstname" : _firstnamecontroller.text.trim(),
+        "secondname" : _secondnamecontroller.text.trim(),
+        "email" : _emailcontroller.text.trim(),
+        "password" : _passwordcontroller.text.trim(),
+        "phone" : _phonecontroller.text.trim(),
+        "role" : "Buyer",
 
-        if (!mounted) return;
-        Navigator.pop(context);
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const LogInScreen()));
-      }
+      };
+      usersRef.set(userDataMap);
+
+      // print('Hi');
+      // if (userFirebase != null) {
+      //   String uid = userFirebase.uid;
+      //   String imageUrl = _image != null ? await uploadImageToStorage('profileImage/$uid', _image!) : '';
+      //
+      //   await saveData(
+      //     firstName: _firstnamecontroller.text.trim(),
+      //     secondName: _secondnamecontroller.text.trim(),
+      //     imageUrl: imageUrl,
+      //     uid: uid,
+      //   );
+      //
+      //   if (!mounted) return;
+      //
+      //   // Navigate to login screen after successful registration
+      //   Navigator.pop(context); // Remove current screen from stack
+      //   Navigator.push(context, MaterialPageRoute(builder: (context) => const LogInScreen()));
+      // }
     } catch (error) {
       // Handle registration error
-      print(error);
+      print('Registration error: $error');
+      // Example: Display error message to user
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registration failed. Please try again later.')));
     }
   }
 
@@ -83,25 +116,17 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
   }
 
   Future<void> selectImage() async {
-    final ImagePicker _imagePicker = ImagePicker();
-    XFile? _file = await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (_file != null) {
-      _image = await _file.readAsBytes();
+    final ImagePicker imagePicker = ImagePicker();
+    XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
+    if (file != null) {
+      _image = await file.readAsBytes();
       setState(() {});
     } else {
       print('No Images Selected');
     }
   }
 
-  @override
-  void dispose() {
-    _firstnamecontroller.dispose();
-    _secondnamecontroller.dispose();
-    _emailcontroller.dispose();
-    _passwordcontroller.dispose();
-    _phonecontroller.dispose();
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -149,16 +174,16 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                         TextFormField(
                           validator: (firstName) {
                             if (firstName!.isEmpty) {
-                              return "Please Enter first name";
+                              return "Please Enter the Name";
                             }
                             return null;
                           },
                           controller: _firstnamecontroller,
                           decoration: const InputDecoration(
                             prefixIcon: Icon(Icons.people_alt_outlined),
-                            labelText: 'First Name',
+                            labelText: 'Name',
                             labelStyle: TextStyle(fontSize: 20),
-                            hintText: 'First Name',
+                            hintText: 'Name',
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.text,
@@ -168,16 +193,16 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                         TextFormField(
                           validator: (secondName) {
                             if (secondName!.isEmpty) {
-                              return "Please Enter second name";
+                              return "Please Enter the District";
                             }
                             return null;
                           },
                           controller: _secondnamecontroller,
                           decoration: const InputDecoration(
                             prefixIcon: Icon(Icons.people_alt_outlined),
-                            labelText: 'Second Name',
+                            labelText: 'District',
                             labelStyle: TextStyle(fontSize: 20),
-                            hintText: 'Second Name',
+                            hintText: 'District',
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.text,
@@ -256,20 +281,24 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                         const SizedBox(height: 30.0),
 
                         SizedBox(
-                            height: 43.0,
-                            width: double.infinity,
-                            child: ElevatedButton(
-                                onPressed: () {
-                                    if (formKey.currentState!.validate() && _image != null) {
-                                        formKey.currentState!.save();
-                                        registerNewUser();
-                                    }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                ),
-                                child: const Text('Sign Up', style: TextStyle(fontSize: 20, color: Colors.white),),
+                          height: 43.0,
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (formKey.currentState!.validate()) {
+                                formKey.currentState!.save();
+                                // checkIfNetworkIsAvailable();
+                                registerNewUser();
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
                             ),
+                            child: const Text(
+                              'Sign Up',
+                              style: TextStyle(fontSize: 20, color: Colors.white),
+                            ),
+                          ),
                         ),
 
                         const SizedBox(height: 20.0),
@@ -306,4 +335,6 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
     );
   }
 }
+
+
 
