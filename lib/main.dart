@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:veg/buyerpages/Cart/model_cart.dart';
 import 'package:veg/buyerpages/homepage_buyer.dart';
 import 'package:veg/login_pages/login.dart';
+import 'package:veg/sellerpages/homepage_seller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +38,7 @@ class MyApp extends StatelessWidget {
           create: (context) => ModelCartUse(),
           builder: (context, child) => const MaterialApp(
             debugShowCheckedModeBanner: false,
-            home: HomePageBuyer(),
+            home: HomePageSeller(),
           ),
       );
   }

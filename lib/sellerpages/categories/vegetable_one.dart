@@ -10,29 +10,6 @@ class VegetableOne extends StatefulWidget {
 }
 
 class _VegetableOneState extends State<VegetableOne> {
-  TextEditingController priceController =TextEditingController();
-  TextEditingController quantityController =TextEditingController();
-
-  final CollectionReference  vegetableItems = FirebaseFirestore.instance.collection("Vegetable") ;
-  Future<void> vegetableData()  async{
-    return showDialog(
-      context: context,
-      builder: (BuildContext context){
-        return myDialogBox( context: context ,
-            onPressed:(){
-              String price = priceController.text;
-              String quantity = quantityController.text;
-              vegetableItems.add({
-                'price' :price ,
-                'quantity' : quantity
-              });
-              Navigator.pop(context);
-            });
-      },
-    ) ;
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,7 +75,6 @@ class _VegetableOneState extends State<VegetableOne> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         GestureDetector(
-                          onTap: vegetableData,
                           child: Hero(
                             tag: 'fishesHro',
                             child: Container(
@@ -241,97 +217,4 @@ class _VegetableOneState extends State<VegetableOne> {
       ),
     );
   }
-  Dialog myDialogBox({
-    required BuildContext context,
-    required VoidCallback onPressed ,
-  }){
-    return Dialog(
-      shape : RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ) ,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child:Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 8,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Add the details",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18 ,
-                    ),
-                  ),
-                  IconButton(onPressed: () {
-                    Navigator.pop(context);
-
-                  },
-                      icon: const Icon(Icons.close))
-                ],
-              ),
-              commonTextField("eg.  00.00 Rs " , "Enter price of one kilo" , priceController),
-              commonTextField("eg.  00.00 kg" , "Enter price quantity in kilo" , quantityController),
-              ElevatedButton(
-                onPressed: onPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green ,
-                ),
-                child: const Text(
-                  'Store' ,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-
-                ),
-              ),
-              const SizedBox(height: 10,) ,
-
-
-            ],
-          ),
-        ),
-      ) ,
-    ) ;
-  }
-  Padding  commonTextField(hint,label, controller){
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20 ,
-        vertical: 8,
-      ),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: hint,
-          labelText:label,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: const BorderSide(
-              color: Colors.green,
-              width : 2,
-            ),
-          ),
-          enabledBorder:OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: const BorderSide(
-              color: Colors.green,
-              width : 2,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
 }
