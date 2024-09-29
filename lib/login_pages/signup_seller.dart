@@ -1,8 +1,21 @@
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:veg/authentication/auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:veg/login_pages/login.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:veg/authentication/auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const SignUpScreenSeller());
+}
 
 class SignUpScreenSeller extends StatefulWidget {
   const SignUpScreenSeller({super.key});
@@ -19,7 +32,7 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
   final TextEditingController _phonecontroller = TextEditingController();
-
+  Uint8List? _image;
   @override
   void dispose() {
     _firstnamecontroller.dispose();
@@ -28,6 +41,89 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
     _passwordcontroller.dispose();
     _phonecontroller.dispose();
     super.dispose();
+  }
+  Future<void> registerNewUser() async {
+    try {
+      User? userFirebase = (await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailcontroller.text.trim(),
+        password: _passwordcontroller.text.trim(),
+      )).user;
+
+      if (!context.mounted) return;
+      Navigator.pop(context);
+      DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(userFirebase!.uid);
+      Map userDataMap = {
+        "firstname" : _firstnamecontroller.text.trim(),
+        "secondname" : _secondnamecontroller.text.trim(),
+        "email" : _emailcontroller.text.trim(),
+        "password" : _passwordcontroller.text.trim(),
+        "phone" : _phonecontroller.text.trim(),
+        "role" : "Seller",
+
+      };
+      usersRef.set(userDataMap);
+
+      // print('Hi');
+      // if (userFirebase != null) {
+      //   String uid = userFirebase.uid;
+      //   String imageUrl = _image != null ? await uploadImageToStorage('profileImage/$uid', _image!) : '';
+      //
+      //   await saveData(
+      //     firstName: _firstnamecontroller.text.trim(),
+      //     secondName: _secondnamecontroller.text.trim(),
+      //     imageUrl: imageUrl,
+      //     uid: uid,
+      //   );
+      //
+      //   if (!mounted) return;
+      //
+      //   // Navigate to login screen after successful registration
+      //   Navigator.pop(context); // Remove current screen from stack
+      //   Navigator.push(context, MaterialPageRoute(builder: (context) => const LogInScreen()));
+      // }
+    } catch (error) {
+      // Handle registration error
+      print('Registration error: $error');
+      // Example: Display error message to user
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registration failed. Please try again later.')));
+    }
+  }
+
+  Future<String> uploadImageToStorage(String childName, Uint8List file) async {
+    Reference ref = FirebaseStorage.instance.ref().child(childName);
+    UploadTask uploadTask = ref.putData(file);
+    TaskSnapshot snapshot = await uploadTask;
+    String downloadUrl = await snapshot.ref.getDownloadURL();
+    return downloadUrl;
+  }
+
+  Future<void> saveData({
+    required String firstName,
+    required String secondName,
+    required String imageUrl,
+    required String uid,
+  }) async {
+    try {
+      await FirebaseFirestore.instance.collection('userProfile').doc(uid).set({
+        'firstName': firstName,
+        'secondName': secondName,
+        'imageLink': imageUrl,
+        'uid': uid,
+      });
+    } catch (err) {
+      print(err);
+    }
+  }
+
+  Future<void> selectImage() async {
+    final ImagePicker imagePicker = ImagePicker();
+    XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
+    if (file != null) {
+      _image = await file.readAsBytes();
+      setState(() {});
+    } else {
+      print('No Images Selected');
+    }
   }
 
   @override
@@ -61,6 +157,25 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
                 const SizedBox(
                   height: 30.0,
                 ),
+                Stack(
+                  children: [
+                    _image != null
+                        ? CircleAvatar(radius: 64, backgroundImage: MemoryImage(_image!))
+                        : const CircleAvatar(
+                      radius: 64,
+                      backgroundImage: NetworkImage('https://png.pngitem.com/pimgs/s/421-4212266_transparent-default-avatar-png-default-avatar-images-png.png'),
+                    ),
+                    Positioned(
+                      bottom: -10,
+                      left: 80,
+                      child: IconButton(
+                        onPressed: selectImage,
+                        icon: const Icon(Icons.add_a_photo),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30.0),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
@@ -239,26 +354,5 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
     );
   }
 
-  void registerNewUser() async {
-    final User? userFirebase = (
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailcontroller.text.trim(),
-          password: _passwordcontroller.text.trim(),
-        )
-    ).user;
-    if (!context.mounted) return;
-    Navigator.pop(context);
-    DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(userFirebase!.uid);
-    Map userDataMap = {
-      "firstname" : _firstnamecontroller.text.trim(),
-      "secondname" : _secondnamecontroller.text.trim(),
-      "email" : _emailcontroller.text.trim(),
-      "password" : _passwordcontroller.text.trim(),
-      "phone" : _phonecontroller.text.trim(),
-      "role" : "Seller",
 
-    };
-    usersRef.set(userDataMap);
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const LogInScreen()));
-  }
 }

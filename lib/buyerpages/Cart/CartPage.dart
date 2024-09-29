@@ -19,7 +19,7 @@ class _CartPageState extends State<CartPage> {
     Provider.of<ModelCartUse>(context, listen: false)
         .removeItemFromCart(cartModel);
 
-    final snackBar = SnackBar(
+    final snackBar = const SnackBar(
       content: Text('Successfully removed from the cart'),
       duration: Duration(seconds: 1),
     );
@@ -35,11 +35,11 @@ class _CartPageState extends State<CartPage> {
           padding: const EdgeInsets.all(25.0),
           child: Column(
             children: [
-              Text(
+              const Text(
                 'Your Cart',
                 style: TextStyle(fontSize: 20),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               // List of cart items
               Expanded(
                 child: ListView.builder(
@@ -52,12 +52,12 @@ class _CartPageState extends State<CartPage> {
                     return CoffeeTile(
                       cartModel: eachModel,
                       onPressed: () => removeFromCart(eachModel),
-                      icon: Icon(Icons.delete),
+                      icon: const Icon(Icons.delete),
                     );
                   },
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               // Buttons to navigate to other pages
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -71,7 +71,7 @@ class _CartPageState extends State<CartPage> {
                         ),
                       );
                     },
-                    child: Text('Cancel'),
+                    child: const Text('Cancel'),
                   ),
                   ElevatedButton(
                     onPressed: () {
@@ -82,7 +82,7 @@ class _CartPageState extends State<CartPage> {
                         ),
                       );
                     },
-                    child: Text('Confirm'),
+                    child: const Text('Confirm'),
                   ),
                 ],
               ),

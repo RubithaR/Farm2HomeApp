@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
           create: (context) => ModelCartUse(),
           builder: (context, child) => const MaterialApp(
             debugShowCheckedModeBanner: false,
-            home: HomePageSeller(),
+            home: LogInScreen(),
           ),
       );
   }
