@@ -44,7 +44,7 @@ class _HomePageSellerState extends State<HomePageSeller> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const Additemspage(),
+                            builder: (context) => const AddItemsPage(),
                           ),
                         );
                       },

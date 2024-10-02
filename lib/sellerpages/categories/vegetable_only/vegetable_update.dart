@@ -1,87 +1,70 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:veg/sellerpages/AddItemsPage.dart';
-import 'package:veg/sellerpages/categories/vegetable_only/veg_card.dart';
 
-class VegetableOne extends StatefulWidget {
-  const VegetableOne({super.key});
+class VegetableUpdate extends StatefulWidget {
+  final String itemId;
+  final String name;
+  final String price;
+  final String quantity;
+
+  const VegetableUpdate({
+    Key? key,
+    required this.itemId,
+    required this.name,
+    required this.price,
+    required this.quantity,
+  }) : super(key: key);
 
   @override
-  State<VegetableOne> createState() => _VegetableOneState();
+  _VegetableUpdateState createState() => _VegetableUpdateState();
 }
 
-class _VegetableOneState extends State<VegetableOne> {
-  User? currentFirebaseUser;
-
-  // Define a GlobalKey for the form
+class _VegetableUpdateState extends State<VegetableUpdate> {
   final _formKey = GlobalKey<FormState>();
 
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
-  final TextEditingController _nameVegController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    currentFirebaseUser = FirebaseAuth.instance.currentUser;
+    // Set initial values for the text fields
+    _nameController.text = widget.name;
+    _priceController.text = widget.price;
+    _quantityController.text = widget.quantity;
   }
 
   @override
   void dispose() {
-    // Dispose controllers when not needed
+    _nameController.dispose();
     _priceController.dispose();
     _quantityController.dispose();
-    _nameVegController.dispose();
     super.dispose();
   }
 
-  // Save vegetable information to Firebase
-  void saveVegetableInfo() {
+  // Function to update vegetable details
+  void updateVegetable() {
     if (_formKey.currentState!.validate()) {
-      if (currentFirebaseUser != null) {
-        // Reference to seller's node in Realtime Database
-        DatabaseReference sellersRef = FirebaseDatabase.instance
-            .ref()
-            .child("sellers")
-            .child(currentFirebaseUser!.uid)
-            .child("vegetable_details");
+      DatabaseReference sellersRef = FirebaseDatabase.instance
+          .ref()
+          .child("sellers")
+          .child(FirebaseAuth.instance.currentUser!.uid)
+          .child("vegetable_details")
+          .child(widget.itemId);
 
-        // Generate a new key for the entry
-        String key = sellersRef.push().key!;
-
-        // Create a map to hold the vegetable data
-        Map<String, String> sellerDataMap = {
-          "price": _priceController.text.trim(),
-          "quantity": _quantityController.text.trim(),
-          "name_veg": _nameVegController.text.trim(),
-        };
-
-        // Save data to Firebase
-        sellersRef.child(key).set(sellerDataMap).then((_) {
-          // Clear the form fields after saving
-          _priceController.clear();
-          _quantityController.clear();
-          _nameVegController.clear();
-
-          // Navigate to AddItemsPage
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const Sample()),
-          );
-        }).catchError((error) {
-          // Handle errors (e.g., network issues)
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save data: $error')),
-          );
-        });
-      }
-    } else {
-      // If form is not valid, show an error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill out the form correctly')),
-      );
+      sellersRef.update({
+        "name_veg": _nameController.text,
+        "price": _priceController.text,
+        "quantity": _quantityController.text,
+      }).then((_) {
+        Navigator.pop(context); // Go back to the previous page
+      }).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update data: $error')),
+        );
+      });
     }
   }
 
@@ -91,7 +74,7 @@ class _VegetableOneState extends State<VegetableOne> {
       appBar: AppBar(
         backgroundColor: Colors.green,
         title: const Text(
-          'Vegetable',
+          'Update Vegetable',
           style: TextStyle(fontSize: 20.0, color: Colors.white),
         ),
       ),
@@ -102,72 +85,29 @@ class _VegetableOneState extends State<VegetableOne> {
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
               child: Column(
                 children: [
-                  // Search Bar
-                  Container(
-                    width: double.infinity,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
-                          spreadRadius: 2,
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        )
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            CupertinoIcons.search,
-                            color: Colors.green,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: TextFormField(
-                              decoration: const InputDecoration(
-                                hintText: "Search Vegetable",
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          const Icon(
-                            Icons.filter_list,
-                            color: Colors.green,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
                   // Form widget with form fields
                   Form(
-                    key: _formKey, // Assign the form key
+                    key: _formKey,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 2),
                       child: Column(
                         children: [
                           _buildTextField(
-                            controller: _nameVegController,
+                            controller: _nameController,
                             label: 'Name',
                             hintText: 'Enter the name of the vegetable',
                           ),
                           const SizedBox(height: 20.0),
                           _buildTextField(
                             controller: _priceController,
-                            label: 'Price for 1kg ',
+                            label: 'Price for 1kg',
                             hintText: 'Enter the price in LkR',
                             keyboardType: TextInputType.number,
                           ),
                           const SizedBox(height: 20.0),
                           _buildTextField(
                             controller: _quantityController,
-                            label: 'Quantity (in kg) ',
+                            label: 'Quantity (in kg)',
                             hintText: 'Enter the quantity you have now',
                             keyboardType: TextInputType.number,
                           ),
@@ -192,10 +132,7 @@ class _VegetableOneState extends State<VegetableOne> {
                       height: 43.0,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const AddItemsPage()),
-                          );
+                          Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
@@ -215,12 +152,12 @@ class _VegetableOneState extends State<VegetableOne> {
                     child: SizedBox(
                       height: 43.0,
                       child: ElevatedButton(
-                        onPressed: saveVegetableInfo, // Call saveVegetableInfo
+                        onPressed: updateVegetable,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                         ),
                         child: const Text(
-                          'Save',
+                          'Update',
                           style: TextStyle(
                             fontSize: 20,
                             color: Colors.white,
