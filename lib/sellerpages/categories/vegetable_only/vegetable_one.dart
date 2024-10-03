@@ -2,8 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:veg/sellerpages/AddItemsPage.dart';
-import 'package:veg/sellerpages/categories/vegetable_only/veg_card.dart';
+import 'package:veg/sellerpages/add_item_page.dart';
 
 class VegetableOne extends StatefulWidget {
   const VegetableOne({super.key});
@@ -68,7 +67,7 @@ class _VegetableOneState extends State<VegetableOne> {
           // Navigate to AddItemsPage
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Sample()),
+            MaterialPageRoute(builder: (context) => const AddItemsPage()),
           );
         }).catchError((error) {
           // Handle errors (e.g., network issues)

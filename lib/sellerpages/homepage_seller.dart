@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:veg/sellerpages/AddItemsPage.dart';
+import 'package:veg/sellerpages/add_item_page.dart';
 import 'package:veg/sellerpages/categories/categories.dart';
 
 class HomePageSeller extends StatefulWidget {
