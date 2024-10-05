@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:veg/buyerpages/Cart_page.dart';
 
 class Sample extends StatefulWidget {
   const Sample({super.key});
@@ -15,10 +16,7 @@ class _SampleState extends State<Sample> {
   @override
   void initState() {
     super.initState();
-    // Retrieve the current logged-in Firebase user
     currentFirebaseUser = FirebaseAuth.instance.currentUser;
-
-    // Log the current user for debugging purposes
     print("Current User: $currentFirebaseUser");
   }
 
@@ -35,9 +33,11 @@ class _SampleState extends State<Sample> {
       );
     }
 
-    // Reference to the sellers and users in Firebase
-    DatabaseReference sellersRef = FirebaseDatabase.instance.ref().child("sellers");
+    DatabaseReference sellersRef =
+        FirebaseDatabase.instance.ref().child("sellers");
     DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users");
+    DatabaseReference ordersRef =
+        FirebaseDatabase.instance.ref().child("orders");
 
     return Scaffold(
       appBar: AppBar(
@@ -46,9 +46,20 @@ class _SampleState extends State<Sample> {
           'Seller and Vegetable Details',
           style: TextStyle(fontSize: 20.0, color: Colors.white),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const Cart()),
+              );
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<DatabaseEvent>(
-        future: sellersRef.once(), // Fetch sellers data once
+        future: sellersRef.once(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -60,38 +71,45 @@ class _SampleState extends State<Sample> {
             return const Center(child: Text("No Sellers Found"));
           }
 
-          Map<dynamic, dynamic> sellersData = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+          Map<dynamic, dynamic> sellersData =
+              snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
           List<Widget> sellerWidgets = [];
 
-          // Iterate through each seller and their vegetable details
           return FutureBuilder<List<Widget>>(
             future: Future.wait(sellersData.keys.map((sellerId) async {
-              // Fetch seller's user info
-              DataSnapshot userSnapshot = (await usersRef.child(sellerId).once()).snapshot; // Accessing the snapshot
-              Map<dynamic, dynamic>? userInfo = userSnapshot.value as Map<dynamic, dynamic>?;
+              DataSnapshot userSnapshot =
+                  (await usersRef.child(sellerId).once()).snapshot;
+              Map<dynamic, dynamic>? userInfo =
+                  userSnapshot.value as Map<dynamic, dynamic>?;
 
-              // Get the seller's first name
               String firstName = userInfo?['firstname'] ?? 'Unknown';
               String secondName = userInfo?['secondname'] ?? '';
-              String fullName = firstName + (secondName.isNotEmpty ? ' ' + secondName : '');
+              String fullName =
+                  firstName + (secondName.isNotEmpty ? ' ' + secondName : '');
 
-              // Create a list for the seller's vegetables
               List<Widget> vegetableWidgets = [];
               if (sellersData[sellerId]['vegetable_details'] != null) {
-                Map<dynamic, dynamic> vegetableDetails = sellersData[sellerId]['vegetable_details'];
+                Map<dynamic, dynamic> vegetableDetails =
+                    sellersData[sellerId]['vegetable_details'];
                 vegetableDetails.forEach((vegId, vegInfo) {
                   vegetableWidgets.add(
                     ListTile(
-                      title: Text(vegInfo['name_veg'] ?? 'Unnamed Vegetable'), // Use a default if null
-                      subtitle: Text("Price: ${vegInfo['price'] ?? 'N/A'}, Quantity: ${vegInfo['quantity'] ?? 'N/A'}"),
+                      title: GestureDetector(
+                        child: Text(vegInfo['name_veg'] ?? 'Unnamed Vegetable'),
+                        onTap: () => _showQuantityDialog(
+                            vegInfo, sellerId, vegId, ordersRef),
+                      ),
+                      subtitle: Text(
+                          "Price: ${vegInfo['price'] ?? 'N/A'}, Quantity: ${vegInfo['quantity'] ?? 'N/A'}"),
                     ),
                   );
                 });
               }
 
-              // Add the seller's name and their vegetable details to the list
               return ExpansionTile(
-                title: Text(fullName.trim().isEmpty ? 'Unknown Seller' : fullName.trim()), // Default name if empty
+                title: Text(fullName.trim().isEmpty
+                    ? 'Unknown Seller'
+                    : fullName.trim()),
                 children: vegetableWidgets,
               );
             })).then((value) => value.toList()),
@@ -103,7 +121,6 @@ class _SampleState extends State<Sample> {
                 return Center(child: Text("Error: ${futureSnapshot.error}"));
               }
 
-              // Use sellerWidgets here
               return ListView(
                 children: futureSnapshot.data ?? [],
               );
@@ -111,6 +128,61 @@ class _SampleState extends State<Sample> {
           );
         },
       ),
+    );
+  }
+
+  void _showQuantityDialog(Map<dynamic, dynamic> vegInfo, String sellerId,
+      String vegId, DatabaseReference ordersRef) {
+    final TextEditingController quantityController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Enter Quantity'),
+          content: TextField(
+            controller: quantityController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(hintText: 'Enter quantity'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                int quantity = int.tryParse(quantityController.text) ?? 0;
+                if (quantity > 0) {
+                  double price =
+                      double.tryParse(vegInfo['price'].toString()) ?? 0;
+                  double totalPrice = price * quantity;
+
+                  // Add to cart in Firebase
+                  ordersRef
+                      .child(currentFirebaseUser!.uid)
+                      .child(sellerId)
+                      .child(vegId)
+                      .set({
+                    "name_veg": vegInfo['name_veg'],
+                    "quantity": quantity,
+                    "total_price": totalPrice,
+                    "buyer_id": currentFirebaseUser!.uid,
+                  });
+
+                  // Optionally, show a confirmation message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Added to cart!')),
+                  );
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Add to Cart'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

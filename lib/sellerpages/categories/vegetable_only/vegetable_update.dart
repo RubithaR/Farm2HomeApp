@@ -89,7 +89,8 @@ class _VegetableUpdateState extends State<VegetableUpdate> {
                   Form(
                     key: _formKey,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 2),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 25, horizontal: 2),
                       child: Column(
                         children: [
                           _buildTextField(
