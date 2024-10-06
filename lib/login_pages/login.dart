@@ -6,6 +6,7 @@ import 'package:veg/login_pages/signup_buyer.dart';
 import 'package:veg/login_pages/signup_seller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:veg/sellerpages/homepage_seller.dart';
+import 'package:geolocator/geolocator.dart';
 
 class LogInScreen extends StatefulWidget {
   const LogInScreen({super.key});
@@ -19,26 +20,111 @@ class _LogInScreenState extends State<LogInScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+
+  Future<Position> getCurrentLocation(BuildContext context) async {
+    // Check if location services are enabled
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled, show a dialog
+      _showLocationServiceDialog(context);
+      return Future.error('Location services are disabled.');
+    }
+
+    // Check location permissions
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permission denied, show an error dialog
+        _showPermissionDeniedDialog(context);
+        return Future.error('Location permissions are denied.');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are permanently denied, show an error dialog
+      _showPermissionDeniedDialog(context);
+      return Future.error('Location permissions are permanently denied.');
+    }
+
+    // If everything is okay, return the current position
+    return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+  }
+
+// Function to show the location services dialog
+  void _showLocationServiceDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Location Services Disabled'),
+        content: const Text('Please enable location services in your settings.'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Okay'),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+// Function to show the permission denied dialog
+  void _showPermissionDeniedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Location Permission Denied'),
+        content: const Text('Please grant location permission in your settings.'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Okay'),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   void _signIn() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
     try {
+      // Sign in user
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
+
       User? user = userCredential.user;
       if (user != null) {
-        DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(user.uid);
-        DatabaseEvent event;
+        // Get current location before storing
+        Position position;
         try {
-          event = await userRef.once();
+          position = await getCurrentLocation(context);
         } catch (e) {
-          _showErrorDialog('Error fetching data: $e');
-          return;
+          _showErrorDialog('Error fetching location: $e');
+          return; // Stop further execution if there's an error
         }
 
+        // Store user location in the database
+        String uid = user.uid;
+        DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(uid);
+
+        await userRef.update({
+          'location': {
+            'latitude': position.latitude,
+            'longitude': position.longitude,
+          }
+        });
+
+        // Fetch user data
+        DatabaseEvent event = await userRef.once();
         if (event.snapshot.exists) {
           Map<dynamic, dynamic>? userData = event.snapshot.value as Map<dynamic, dynamic>?;
           if (userData != null) {
@@ -186,7 +272,8 @@ class _LogInScreenState extends State<LogInScreen> {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const Forgotpassword()),
+                              MaterialPageRoute(
+                                  builder: (context) => const Forgotpassword()),
                             );
                           },
                           child: const Text('Forget Password?'),
@@ -266,20 +353,13 @@ class _LogInScreenState extends State<LogInScreen> {
                                             );
                                           },
                                         ),
-                                        const SizedBox(height: 20.0),
                                       ],
                                     ),
                                   );
                                 },
                               );
                             },
-                            child: const Text(
-                              "Sign Up",
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            child: const Text('Create Account'),
                           ),
                         ],
                       ),
