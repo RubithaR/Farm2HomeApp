@@ -79,7 +79,7 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
       //
       //   // Navigate to login screen after successful registration
       //   Navigator.pop(context); // Remove current screen from stack
-      //   Navigator.push(context, MaterialPageRoute(builder: (context) => const LogInScreen()));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => const LogInScreen()));
       // }
     } catch (error) {
       // Handle registration error

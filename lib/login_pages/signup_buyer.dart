@@ -26,7 +26,7 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController _firstnamecontroller = TextEditingController();
-  final TextEditingController _secondnamecontroller = TextEditingController();
+  final TextEditingController _districtcontroller = TextEditingController();
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
   final TextEditingController _phonecontroller = TextEditingController();
@@ -35,7 +35,7 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
   @override
   void dispose() {
     _firstnamecontroller.dispose();
-    _secondnamecontroller.dispose();
+    _districtcontroller.dispose();
     _emailcontroller.dispose();
     _passwordcontroller.dispose();
     _phonecontroller.dispose();
@@ -54,7 +54,7 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
       DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(userFirebase!.uid);
       Map userDataMap = {
         "firstname" : _firstnamecontroller.text.trim(),
-        "secondname" : _secondnamecontroller.text.trim(),
+        "district" : _districtcontroller.text.trim(),
         "email" : _emailcontroller.text.trim(),
         "password" : _passwordcontroller.text.trim(),
         "phone" : _phonecontroller.text.trim(),
@@ -63,24 +63,8 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
       };
       usersRef.set(userDataMap);
 
-      // print('Hi');
-      // if (userFirebase != null) {
-      //   String uid = userFirebase.uid;
-      //   String imageUrl = _image != null ? await uploadImageToStorage('profileImage/$uid', _image!) : '';
-      //
-      //   await saveData(
-      //     firstName: _firstnamecontroller.text.trim(),
-      //     secondName: _secondnamecontroller.text.trim(),
-      //     imageUrl: imageUrl,
-      //     uid: uid,
-      //   );
-      //
-      //   if (!mounted) return;
-      //
-      //   // Navigate to login screen after successful registration
-      //   Navigator.pop(context); // Remove current screen from stack
-      //   Navigator.push(context, MaterialPageRoute(builder: (context) => const LogInScreen()));
-      // }
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LogInScreen()));
+
     } catch (error) {
       // Handle registration error
       print('Registration error: $error');
@@ -197,7 +181,7 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                             }
                             return null;
                           },
-                          controller: _secondnamecontroller,
+                          controller: _districtcontroller,
                           decoration: const InputDecoration(
                             prefixIcon: Icon(Icons.people_alt_outlined),
                             labelText: 'District',
