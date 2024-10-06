@@ -3,7 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:veg/sellerpages/categories/vegetable_only/vegetable_one.dart';
+import 'package:veg/sellerpages/categories/vegetable_only/vegetable_adding.dart';
 import 'package:veg/sellerpages/categories/vegetable_only/vegetable_update.dart'; // Assume this navigates to vegetable details
 
 class AddItemsPage extends StatefulWidget {

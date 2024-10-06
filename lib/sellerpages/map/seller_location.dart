@@ -3,107 +3,74 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:math';
 
-class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+class MapPageSeller extends StatefulWidget {
+  const MapPageSeller({super.key});
 
   @override
-  State<MapPage> createState() => MapPageState();
+  State<MapPageSeller> createState() => MapPageSellerState();
 }
 
-class MapPageState extends State<MapPage> {
+class MapPageSellerState extends State<MapPageSeller> {
   late GoogleMapController mapController;
   LatLng _currentLocation = const LatLng(0.0, 0.0);
   bool _locationFetched = false;
   String? uid;
-  Map<MarkerId, Marker> sellerMarkers = {}; // Store sellers' markers
 
   @override
   void initState() {
     super.initState();
-    _getUserLocationFromDatabase(); // Retrieve user location from Firebase
+    _getUserLocationFromDatabase(); // Retrieve user location from Firebase on login
   }
 
-  Future<void> _getNearbySellers() async {
-    DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users");
-    DatabaseEvent event = await usersRef.once();
-    Map<dynamic, dynamic>? allUsers = event.snapshot.value as Map<dynamic, dynamic>?;
-
-    if (allUsers != null) {
-      for (var key in allUsers.keys) {
-        var value = allUsers[key];
-        if (value['role'] == 'Seller' && value['location'] != null) {
-          LatLng sellerLocation = LatLng(
-            value['location']['latitude'] ?? 0.0,
-            value['location']['longitude'] ?? 0.0,
-          );
-
-          double distance = _calculateDistance(_currentLocation, sellerLocation);
-          if (distance <= 5.0) { // Filter sellers within 5 km
-            // Use the new method with ImageConfiguration
-            BitmapDescriptor markerIcon = await BitmapDescriptor.fromAssetImage(
-              const ImageConfiguration(size: Size(48, 48)), // You can adjust the size as needed
-              'assets/images/van_image.png',
-            );
-            MarkerId markerId = MarkerId(key);
-            Marker marker = Marker(
-              markerId: markerId,
-              position: sellerLocation,
-              icon: markerIcon, // Use the custom icon here
-              infoWindow: InfoWindow(title: "${value['firstname']} "),
-            );
-
-            setState(() {
-              sellerMarkers[markerId] = marker;
-            });
-          }
-        }
-      }
-    }
-  }
-
+  // Fetch location from Firebase Realtime Database on login
   Future<void> _getUserLocationFromDatabase() async {
-    uid = FirebaseAuth.instance.currentUser?.uid;
+    uid = FirebaseAuth.instance.currentUser?.uid; // Get seller's UID
     if (uid != null) {
+      // Reference to the seller's data in Firebase Realtime Database
       DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(uid!);
+
+      // Fetch the current location saved in Firebase
       DatabaseEvent event = await userRef.once();
 
+      // If the location exists in Firebase, set the _currentLocation variable
       if (event.snapshot.exists) {
         Map<dynamic, dynamic>? userData = event.snapshot.value as Map<dynamic, dynamic>?;
-
         if (userData != null && userData['location'] != null) {
           setState(() {
             _currentLocation = LatLng(
               userData['location']['latitude'] ?? 0.0,
               userData['location']['longitude'] ?? 0.0,
             );
-            _locationFetched = true;
+            _locationFetched = true; // Mark that location has been fetched
           });
-          _getNearbySellers(); // Fetch sellers after getting current location
         } else {
-          _getCurrentLocation(); // If no saved location, get current location
+          // If no location is saved, fetch the device's current location
+          _getCurrentLocation();
         }
       } else {
-        _getCurrentLocation(); // If no user data found, get current location
+        // If no user data exists in Firebase, fetch the device's current location
+        _getCurrentLocation();
       }
     }
   }
 
+  // Fetch the seller's current device location if no location is found in Firebase
   Future<void> _getCurrentLocation() async {
     try {
       Position position = await getCurrentLocation();
       setState(() {
         _currentLocation = LatLng(position.latitude, position.longitude);
-        _locationFetched = true;
+        _locationFetched = true; // Mark that location has been fetched
       });
-      _updateLocationInFirebase(_currentLocation); // Store new location in Firebase
-      _getNearbySellers(); // Fetch sellers after getting current location
+      // Save the newly fetched location in Firebase for future logins
+      _updateLocationInFirebase(_currentLocation);
     } catch (e) {
       print("Error fetching location: $e");
     }
   }
 
+  // Get the device's current location, handle permissions
   Future<Position> getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -124,8 +91,10 @@ class MapPageState extends State<MapPage> {
     return await Geolocator.getCurrentPosition();
   }
 
+  // Update location in Firebase Realtime Database
   Future<void> _updateLocationInFirebase(LatLng newLocation) async {
     if (uid != null) {
+      // Update the seller's location in Firebase under the 'Users/{uid}/location' path
       DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(uid!);
       await userRef.update({
         'location': {
@@ -136,28 +105,12 @@ class MapPageState extends State<MapPage> {
     }
   }
 
-  double _calculateDistance(LatLng start, LatLng end) {
-    const earthRadius = 6371; // Radius of the Earth in km
-    double dLat = _degreesToRadians(end.latitude - start.latitude);
-    double dLng = _degreesToRadians(end.longitude - start.longitude);
-    double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_degreesToRadians(start.latitude)) *
-            cos(_degreesToRadians(end.latitude)) *
-            sin(dLng / 2) *
-            sin(dLng / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return earthRadius * c;
-  }
-
-  double _degreesToRadians(double degrees) {
-    return degrees * pi / 180;
-  }
-
+  // When the user taps on the map, update the marker and Firebase with the new location
   void _onMapTap(LatLng tappedLocation) {
     setState(() {
-      _currentLocation = tappedLocation;
+      _currentLocation = tappedLocation; // Set new location on the map
     });
-    _updateLocationInFirebase(tappedLocation); // Update new location in Firebase
+    _updateLocationInFirebase(tappedLocation); // Update the location in Firebase
   }
 
   @override
@@ -166,7 +119,7 @@ class MapPageState extends State<MapPage> {
       body: _locationFetched
           ? GoogleMap(
         initialCameraPosition: CameraPosition(
-          target: _currentLocation,
+          target: _currentLocation, // Set initial camera position to the fetched location
           zoom: 14,
         ),
         markers: {
@@ -179,7 +132,6 @@ class MapPageState extends State<MapPage> {
             },
             infoWindow: const InfoWindow(title: 'Your location'),
           ),
-          ...sellerMarkers.values, // Add seller markers
         },
         onMapCreated: (GoogleMapController controller) {
           mapController = controller;

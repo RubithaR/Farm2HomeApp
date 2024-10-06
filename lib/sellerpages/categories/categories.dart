@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/sellerpages/categories/fruits_two.dart';
-import 'package:veg/sellerpages/categories/vegetable_only/vegetable_one.dart';
+import 'package:veg/sellerpages/categories/vegetable_only/vegetable_adding.dart';
 
 class Categories extends StatefulWidget {
   const Categories({super.key});

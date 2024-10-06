@@ -1,12 +1,13 @@
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/buyerpages/Cart/addcart_additem.dart';
-import 'package:veg/buyerpages/Cart/model_cart.dart';
+//import 'package:veg/buyerpages/Cart/model_cart.dart';
 import 'package:veg/googlemapscreens/current_location_screen.dart';
-import 'package:veg/sellerpages/categories/vegetable_only/veg_card.dart';
+import 'package:veg/buyerpages/view_vegetable.dart';
 import '../buyerpages/Widgets/appbarwidget.dart';
 import '../buyerpages/Widgets/categorieswidget.dart';
-import 'package:veg/buyerpages/Cart/ViewOrder.dart';
+//import 'package:veg/buyerpages/Cart/ViewOrder.dart';
 
 class HomePageBuyer extends StatefulWidget {
   const HomePageBuyer({super.key});
@@ -18,6 +19,8 @@ class HomePageBuyer extends StatefulWidget {
 class _HomePageState extends State<HomePageBuyer> {
   @override
   Widget build(BuildContext context) {
+
+
     return Scaffold(
       body: ListView(
         children: [
@@ -95,14 +98,14 @@ class _HomePageState extends State<HomePageBuyer> {
           const Padding(padding: EdgeInsets.symmetric(vertical: 10)),
 
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
             child: Row(
               children: [
                 GestureDetector(
                   onTap: () {},
                   child: Container(
                     padding: const EdgeInsets.only(
-                        top: 1, left: 6, right: 6, bottom: 1),
+                        top: 1, left: 5, right: 5, bottom: 1),
                     decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
@@ -127,7 +130,7 @@ class _HomePageState extends State<HomePageBuyer> {
                         },
                         style: ButtonStyle(
                           shape:
-                              WidgetStateProperty.all<RoundedRectangleBorder>(
+                          WidgetStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                               side: const BorderSide(
@@ -148,7 +151,7 @@ class _HomePageState extends State<HomePageBuyer> {
                             Text(
                               'Random Buy',
                               style:
-                                  TextStyle(fontSize: 20, color: Colors.green),
+                              TextStyle(fontSize: 20, color: Colors.green),
                             ),
                             SizedBox(height: 6),
                           ],
@@ -158,13 +161,13 @@ class _HomePageState extends State<HomePageBuyer> {
                   ),
                 ),
                 const Padding(
-                  padding: EdgeInsets.only(right: 46),
+                  padding: EdgeInsets.only(right: 20),
                 ),
                 GestureDetector(
                   onTap: () {},
                   child: Container(
                     padding: const EdgeInsets.only(
-                        top: 1, left: 6, right: 6, bottom: 1),
+                        top: 1, left: 5, right: 5, bottom: 1),
                     decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
@@ -189,7 +192,7 @@ class _HomePageState extends State<HomePageBuyer> {
                         },
                         style: ButtonStyle(
                           shape:
-                              WidgetStateProperty.all<RoundedRectangleBorder>(
+                          WidgetStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                               side: const BorderSide(
@@ -210,7 +213,7 @@ class _HomePageState extends State<HomePageBuyer> {
                             Text(
                               'My Cart',
                               style:
-                                  TextStyle(fontSize: 20, color: Colors.green),
+                              TextStyle(fontSize: 20, color: Colors.green),
                             ),
                             SizedBox(height: 6),
                           ],
@@ -224,14 +227,14 @@ class _HomePageState extends State<HomePageBuyer> {
           ),
 
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 30),
+            padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 10),
             child: Row(
               children: [
                 GestureDetector(
                   onTap: () {},
                   child: Container(
                     padding: const EdgeInsets.only(
-                        top: 1, left: 6, right: 6, bottom: 1),
+                        top: 1, left: 5, right: 5, bottom: 1),
                     decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
@@ -256,7 +259,7 @@ class _HomePageState extends State<HomePageBuyer> {
                         },
                         style: ButtonStyle(
                           shape:
-                              WidgetStateProperty.all<RoundedRectangleBorder>(
+                          WidgetStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                               side: const BorderSide(
@@ -277,7 +280,7 @@ class _HomePageState extends State<HomePageBuyer> {
                             Text(
                               'My Location',
                               style:
-                                  TextStyle(fontSize: 20, color: Colors.green),
+                              TextStyle(fontSize: 20, color: Colors.green),
                             ),
                             SizedBox(height: 6),
                           ],
@@ -287,13 +290,13 @@ class _HomePageState extends State<HomePageBuyer> {
                   ),
                 ),
                 const Padding(
-                  padding: EdgeInsets.only(right: 46),
+                  padding: EdgeInsets.only(right: 20),
                 ),
                 GestureDetector(
                   onTap: () {},
                   child: Container(
                     padding: const EdgeInsets.only(
-                        top: 1, left: 6, right: 6, bottom: 1),
+                        top: 1, left: 5, right: 5, bottom: 1),
                     decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
@@ -318,7 +321,7 @@ class _HomePageState extends State<HomePageBuyer> {
                         },
                         style: ButtonStyle(
                           shape:
-                              WidgetStateProperty.all<RoundedRectangleBorder>(
+                          WidgetStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                               side: const BorderSide(
@@ -339,7 +342,7 @@ class _HomePageState extends State<HomePageBuyer> {
                             Text(
                               'View orders',
                               style:
-                                  TextStyle(fontSize: 20, color: Colors.green),
+                              TextStyle(fontSize: 20, color: Colors.green),
                             ),
                             SizedBox(height: 6),
                           ],
