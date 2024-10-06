@@ -17,7 +17,7 @@ class PaymentPage extends StatefulWidget {
 
 class _PaymentPageState extends State<PaymentPage> {
   String _selectedPaymentMethod = "cash"; // Default to cash
-  String? _selectedCardType; // New variable for card type
+  String? _selectedCardType; // Variable for card type
 
   final TextEditingController addressController = TextEditingController();
   final TextEditingController cardNumberController = TextEditingController();
@@ -32,15 +32,14 @@ class _PaymentPageState extends State<PaymentPage> {
   final User? currentFirebaseUser = FirebaseAuth.instance.currentUser;
 
   void _submitPayment() {
-    if (_selectedPaymentMethod == "cash") {
-      if (addressController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter your address.')),
-        );
-        return;
-      }
-      _savePaymentDetails("Cash", address: addressController.text);
-    } else {
+    if (addressController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your address.')),
+      );
+      return;
+    }
+
+    if (_selectedPaymentMethod == "card") {
       if (cardNumberController.text.isEmpty ||
           cardHolderNameController.text.isEmpty ||
           secretCodeController.text.isEmpty ||
@@ -50,12 +49,16 @@ class _PaymentPageState extends State<PaymentPage> {
         );
         return;
       }
-      _savePaymentDetails(
-        "Card",
-        cardType: _selectedCardType,
-        cardHolderName: cardHolderNameController.text,
-      );
     }
+
+    _savePaymentDetails(
+      _selectedPaymentMethod == "cash" ? "Cash" : "Card",
+      address: addressController.text,
+      cardType: _selectedPaymentMethod == "card" ? _selectedCardType : null,
+      cardHolderName: _selectedPaymentMethod == "card"
+          ? cardHolderNameController.text
+          : null,
+    );
   }
 
   void _savePaymentDetails(String paymentType,
@@ -73,7 +76,12 @@ class _PaymentPageState extends State<PaymentPage> {
           .child(widget.sellerId)
           .remove()
           .then((_) {
-        // Navigate to ViewPaymentsPage
+        // Show payment successful message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment successful!')),
+        );
+
+        // Navigate to ViewPaymentsPage after showing the success message
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => ViewPaymentsPage()),
@@ -91,36 +99,37 @@ class _PaymentPageState extends State<PaymentPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Total Amount: LKR ${widget.totalAmount.toStringAsFixed(2)}",
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16.0),
-            const Text("Select Payment Method", style: TextStyle(fontSize: 16)),
-            RadioListTile<String>(
-              title: const Text("Cash on Delivery"),
-              value: "cash",
-              groupValue: _selectedPaymentMethod,
-              onChanged: (value) {
-                setState(() {
-                  _selectedPaymentMethod = value!;
-                });
-              },
-            ),
-            RadioListTile<String>(
-              title: const Text("Card Payment"),
-              value: "card",
-              groupValue: _selectedPaymentMethod,
-              onChanged: (value) {
-                setState(() {
-                  _selectedPaymentMethod = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 16.0),
-            if (_selectedPaymentMethod == "cash")
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Total Amount: LKR ${widget.totalAmount.toStringAsFixed(2)}",
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16.0),
+              const Text("Select Payment Method",
+                  style: TextStyle(fontSize: 16)),
+              RadioListTile<String>(
+                title: const Text("Cash on Delivery"),
+                value: "cash",
+                groupValue: _selectedPaymentMethod,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedPaymentMethod = value!;
+                  });
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text("Card Payment"),
+                value: "card",
+                groupValue: _selectedPaymentMethod,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedPaymentMethod = value!;
+                  });
+                },
+              ),
+              const SizedBox(height: 16.0),
               TextField(
                 controller: addressController,
                 decoration: const InputDecoration(
@@ -128,57 +137,59 @@ class _PaymentPageState extends State<PaymentPage> {
                   border: OutlineInputBorder(),
                 ),
               ),
-            if (_selectedPaymentMethod == "card") ...[
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: "Card Type",
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(child: Text("Visa"), value: "Visa"),
-                  DropdownMenuItem(
-                      child: Text("MasterCard"), value: "MasterCard"),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCardType = value;
-                  });
-                },
-                value: _selectedCardType,
-              ),
               const SizedBox(height: 10),
-              TextField(
-                controller: cardNumberController,
-                decoration: const InputDecoration(
-                  labelText: "Card Number",
-                  border: OutlineInputBorder(),
+              if (_selectedPaymentMethod == "card") ...[
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    labelText: "Card Type",
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(child: Text("Visa"), value: "Visa"),
+                    DropdownMenuItem(
+                        child: Text("MasterCard"), value: "MasterCard"),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCardType = value;
+                    });
+                  },
+                  value: _selectedCardType,
                 ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: cardHolderNameController,
-                decoration: const InputDecoration(
-                  labelText: "Card Holder Name",
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: cardNumberController,
+                  decoration: const InputDecoration(
+                    labelText: "Card Number",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: secretCodeController,
-                decoration: const InputDecoration(
-                  labelText: "Secret Code (CVV)",
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: cardHolderNameController,
+                  decoration: const InputDecoration(
+                    labelText: "Card Holder Name",
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-                keyboardType: TextInputType.number,
+                const SizedBox(height: 10),
+                TextField(
+                  controller: secretCodeController,
+                  decoration: const InputDecoration(
+                    labelText: "Secret Code (CVV)",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+              const SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: _submitPayment,
+                child: const Text("Submit Payment"),
               ),
             ],
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _submitPayment,
-              child: const Text("Submit Payment"),
-            ),
-          ],
+          ),
         ),
       ),
     );

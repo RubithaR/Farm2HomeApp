@@ -7,6 +7,7 @@ import 'package:veg/sellerpages/categories/vegetable_only/veg_card.dart';
 import '../buyerpages/Widgets/appbarwidget.dart';
 import '../buyerpages/Widgets/categorieswidget.dart';
 import 'package:veg/buyerpages/Cart/ViewOrder.dart';
+import '../buyerpages/ViewPaymentsPage.dart';
 
 class HomePageBuyer extends StatefulWidget {
   const HomePageBuyer({super.key});
@@ -121,7 +122,7 @@ class _HomePageState extends State<HomePageBuyer> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const MapPage(),
+                              builder: (context) => const Sample(),
                             ),
                           );
                         },
@@ -146,7 +147,7 @@ class _HomePageState extends State<HomePageBuyer> {
                               width: 125,
                             ),
                             Text(
-                              'Random Buy',
+                              'View orders',
                               style:
                                   TextStyle(fontSize: 20, color: Colors.green),
                             ),
@@ -312,7 +313,7 @@ class _HomePageState extends State<HomePageBuyer> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const Sample(),
+                              builder: (context) => const ViewPaymentsPage(),
                             ),
                           );
                         },
@@ -337,7 +338,7 @@ class _HomePageState extends State<HomePageBuyer> {
                               width: 125,
                             ),
                             Text(
-                              'View orders',
+                              'Payment details',
                               style:
                                   TextStyle(fontSize: 20, color: Colors.green),
                             ),
