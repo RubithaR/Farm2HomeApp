@@ -7,9 +7,7 @@ class PaymentPage extends StatefulWidget {
   final String sellerId;
   final double totalAmount;
 
-  const PaymentPage(
-      {required this.sellerId, required this.totalAmount, Key? key})
-      : super(key: key);
+  const PaymentPage({required this.sellerId, required this.totalAmount, super.key});
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -18,27 +16,15 @@ class PaymentPage extends StatefulWidget {
 class _PaymentPageState extends State<PaymentPage> {
   String _selectedPaymentMethod = "cash"; // Default to cash
   String? _selectedCardType; // Variable for card type
-
-  final TextEditingController addressController = TextEditingController();
-  final TextEditingController cardNumberController = TextEditingController();
-  final TextEditingController cardHolderNameController =
-      TextEditingController();
-  final TextEditingController secretCodeController = TextEditingController();
-
-  final DatabaseReference paymentsRef =
-      FirebaseDatabase.instance.ref().child("payments");
-  final DatabaseReference ordersRef =
-      FirebaseDatabase.instance.ref().child("orders"); // Reference for orders
   final User? currentFirebaseUser = FirebaseAuth.instance.currentUser;
 
-  void _submitPayment() {
-    if (addressController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your address.')),
-      );
-      return;
-    }
+  final TextEditingController cardNumberController = TextEditingController();
+  final TextEditingController cardHolderNameController = TextEditingController();
+  final TextEditingController secretCodeController = TextEditingController();
 
+
+  void _submitPayment() async {
+    // Validate payment details
     if (_selectedPaymentMethod == "card") {
       if (cardNumberController.text.isEmpty ||
           cardHolderNameController.text.isEmpty ||
@@ -51,9 +37,9 @@ class _PaymentPageState extends State<PaymentPage> {
       }
     }
 
-    _savePaymentDetails(
-      _selectedPaymentMethod == "cash" ? "Cash" : "Card",
-      address: addressController.text,
+    // Call function to save payment and update database
+    await _savePaymentDetails(
+      paymentType: _selectedPaymentMethod == "cash" ? "Cash" : "Card",
       cardType: _selectedPaymentMethod == "card" ? _selectedCardType : null,
       cardHolderName: _selectedPaymentMethod == "card"
           ? cardHolderNameController.text
@@ -61,34 +47,83 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  void _savePaymentDetails(String paymentType,
-      {String? address, String? cardType, String? cardHolderName}) {
-    paymentsRef.child(currentFirebaseUser!.uid).child(widget.sellerId).set({
-      'totalAmount': widget.totalAmount,
-      'paymentType': paymentType,
-      'address': address,
-      'cardType': cardType,
-      'cardHolderName': cardHolderName,
-    }).then((_) {
-      // Remove items from orders after payment
-      ordersRef
+  Future<void> _savePaymentDetails({
+    required String paymentType,
+    String? cardType,
+    String? cardHolderName,
+  }) async {
+    final DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child('orders');
+    final DatabaseReference finalOrdersRef = FirebaseDatabase.instance.ref().child('final_order');
+
+    try {
+      // Retrieve current buyer's orders from Firebase
+      final DataSnapshot ordersSnapshot = await ordersRef
           .child(currentFirebaseUser!.uid)
           .child(widget.sellerId)
-          .remove()
-          .then((_) {
-        // Show payment successful message
+          .get();
+
+      if (ordersSnapshot.exists) {
+        final Map<dynamic, dynamic> ordersData = ordersSnapshot.value as Map<dynamic, dynamic>;
+
+        // Iterate through the buyer's orders and save them under final_order
+        for (var vegId in ordersData.keys) {
+          var vegInfo = ordersData[vegId];
+          final String orderUniqueId = vegInfo.keys.first; // Get the unique order ID
+
+          // Save the order details under 'final_order'
+          await finalOrdersRef
+              .child(currentFirebaseUser!.uid)
+              .child(widget.sellerId)
+              .child(vegId)
+              .child(orderUniqueId)
+              .set(vegInfo[orderUniqueId]);
+
+          // Save the payment details under 'final_order'
+          await finalOrdersRef
+              .child(currentFirebaseUser!.uid)
+              .child(widget.sellerId)
+              .child(vegId)
+              .child(orderUniqueId)
+              .child("payment")
+              .push()
+              .set({
+            'totalAmount': widget.totalAmount,
+            'paymentType': paymentType,
+            'cardType': cardType,
+            'cardHolderName': cardHolderName,
+          });
+        }
+
+        // Remove the original order from 'orders'
+        await ordersRef
+            .child(currentFirebaseUser!.uid)
+            .child(widget.sellerId)
+            .remove();
+
+        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Payment successful!')),
         );
 
-        // Navigate to ViewPaymentsPage after showing the success message
+        // Navigate to the ViewPaymentsPage after payment is successful
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ViewPaymentsPage()),
+          MaterialPageRoute(builder: (context) => const ViewPaymentsPage()),
         );
-      });
-    });
+      } else {
+        // No orders found for this buyer
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No orders found to process.')),
+        );
+      }
+    } catch (error) {
+      // Handle any errors that occur during the process
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -104,11 +139,9 @@ class _PaymentPageState extends State<PaymentPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("Total Amount: LKR ${widget.totalAmount.toStringAsFixed(2)}",
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold)),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
-              const Text("Select Payment Method",
-                  style: TextStyle(fontSize: 16)),
+              const Text("Select Payment Method", style: TextStyle(fontSize: 16)),
               RadioListTile<String>(
                 title: const Text("Cash on Delivery"),
                 value: "cash",
@@ -129,14 +162,6 @@ class _PaymentPageState extends State<PaymentPage> {
                   });
                 },
               ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(
-                  labelText: "Enter your address",
-                  border: OutlineInputBorder(),
-                ),
-              ),
               const SizedBox(height: 10),
               if (_selectedPaymentMethod == "card") ...[
                 DropdownButtonFormField<String>(
@@ -145,9 +170,8 @@ class _PaymentPageState extends State<PaymentPage> {
                     border: OutlineInputBorder(),
                   ),
                   items: const [
-                    DropdownMenuItem(child: Text("Visa"), value: "Visa"),
-                    DropdownMenuItem(
-                        child: Text("MasterCard"), value: "MasterCard"),
+                    DropdownMenuItem(value: "Visa", child: Text("Visa")),
+                    DropdownMenuItem(value: "MasterCard", child: Text("MasterCard")),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -184,9 +208,18 @@ class _PaymentPageState extends State<PaymentPage> {
                 ),
               ],
               const SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: _submitPayment,
-                child: const Text("Submit Payment"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: _submitPayment,
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: const Text(
+                      "Submit Payment",
+                      style: TextStyle(fontSize: 20, color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

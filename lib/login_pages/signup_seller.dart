@@ -28,7 +28,7 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController _firstnamecontroller = TextEditingController();
-  final TextEditingController _secondnamecontroller = TextEditingController();
+  final TextEditingController _districtcontroller = TextEditingController();
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
   final TextEditingController _phonecontroller = TextEditingController();
@@ -36,7 +36,7 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
   @override
   void dispose() {
     _firstnamecontroller.dispose();
-    _secondnamecontroller.dispose();
+    _districtcontroller.dispose();
     _emailcontroller.dispose();
     _passwordcontroller.dispose();
     _phonecontroller.dispose();
@@ -54,7 +54,7 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
       DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(userFirebase!.uid);
       Map userDataMap = {
         "firstname" : _firstnamecontroller.text.trim(),
-        "secondname" : _secondnamecontroller.text.trim(),
+        "district" : _districtcontroller.text.trim(),
         "email" : _emailcontroller.text.trim(),
         "password" : _passwordcontroller.text.trim(),
         "phone" : _phonecontroller.text.trim(),
@@ -204,16 +204,16 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
                       TextFormField(
                         validator: (secondName) {
                           if (secondName!.isEmpty) {
-                            return "Please Enter Second name";
+                            return "Please Enter district";
                           }
                           return null;
                         },
-                        controller: _secondnamecontroller,
+                        controller: _districtcontroller,
                         decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.people_alt_outlined),
-                          labelText: 'Second Name',
+                          prefixIcon: Icon(Icons.location_city),
+                          labelText: 'District',
                           labelStyle: TextStyle(fontSize: 20),
-                          hintText: 'Second Name',
+                          hintText: 'district',
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.text,

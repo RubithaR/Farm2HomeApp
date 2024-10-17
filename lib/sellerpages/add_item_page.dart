@@ -4,7 +4,8 @@ import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/sellerpages/categories/vegetable_only/vegetable_adding.dart';
-import 'package:veg/sellerpages/categories/vegetable_only/vegetable_update.dart'; // Assume this navigates to vegetable details
+import 'package:veg/sellerpages/categories/vegetable_only/vegetable_update.dart';
+import 'package:veg/sellerpages/homepage_seller.dart'; // Assume this navigates to vegetable details
 
 class AddItemsPage extends StatefulWidget {
   const AddItemsPage({super.key});
@@ -51,6 +52,17 @@ class _AddItemsPageState extends State<AddItemsPage> {
           'Add Items',
           style: TextStyle(fontSize: 20.0, color: Colors.white),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home_filled),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePageSeller()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

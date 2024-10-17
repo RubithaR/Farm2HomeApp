@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:veg/sellerpages/add_item_page.dart';
 import 'package:veg/sellerpages/map/seller_location.dart';
-import 'package:veg/sellerpages/view_orders_page.dart';
+import 'package:veg/sellerpages/view_order/view_orders_page.dart';
 
 class HomePageSeller extends StatefulWidget {
   const HomePageSeller({super.key});
@@ -11,23 +13,52 @@ class HomePageSeller extends StatefulWidget {
 }
 
 class _HomePageSellerState extends State<HomePageSeller> {
+  String? sellerId;
+  String? firstName;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSellerDetails(); // Fetch seller details on init
+  }
+
+  Future<void> _fetchSellerDetails() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    sellerId = user?.uid; // Set sellerId from the current user's UID
+
+    if (sellerId != null) {
+      // Reference to the seller's data in the database
+      DatabaseReference sellerRef = FirebaseDatabase.instance.ref('Users/$sellerId');
+
+      // Get seller data
+      DatabaseEvent event = await sellerRef.once();
+      if (event.snapshot.exists) {
+        final data = event.snapshot.value as Map<dynamic, dynamic>;
+        setState(() {
+          firstName = data['firstname']; // Assuming you're saving the first name under this key
+        });
+      }
+    } else {
+      print('No user is logged in');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Welcome'),
+        title: const Text('Home',), // Greet the seller by name
         backgroundColor: Colors.green,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           // Welcome Message
-          const Padding(
-            padding: EdgeInsets.only(bottom: 20),
-            child: Text(
-              'Welcome to Your Dashboard!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+           Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Text(firstName != null ? 'Welcome, $firstName' : 'Welcome',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+
             ),
           ),
 
@@ -62,7 +93,6 @@ class _HomePageSellerState extends State<HomePageSeller> {
             ),
           ),
 
-
           const SizedBox(height: 20),
 
           // Button Container
@@ -87,10 +117,11 @@ class _HomePageSellerState extends State<HomePageSeller> {
                   imagePath: 'assets/images/buyer_homepage/vegetables.jpeg',
                   label: 'View Orders',
                   onPressed: () {
+                    // Pass the sellerId to ViewOrdersPage
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ViewOrdersPage(),
+                        builder: (context) => ViewOrdersPage(sellerId: sellerId!), // Ensure sellerId is not null
                       ),
                     );
                   },
@@ -128,13 +159,13 @@ class _HomePageSellerState extends State<HomePageSeller> {
         child: TextButton(
           onPressed: onPressed, // Use the passed callback here
           style: ButtonStyle(
-            shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: const BorderSide(color: Colors.green),
               ),
             ),
-            overlayColor: WidgetStateProperty.resolveWith(
+            overlayColor: MaterialStateProperty.resolveWith(
                     (states) => Colors.green.withOpacity(0.2)),
           ),
           child: Column(

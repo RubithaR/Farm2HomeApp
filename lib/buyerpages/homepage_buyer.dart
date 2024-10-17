@@ -2,12 +2,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/buyerpages/Cart/addcart_additem.dart';
+import 'package:veg/buyerpages/Cart/bottom_nav_bar.dart';
+import 'package:veg/buyerpages/order/home_order.dart';
 //import 'package:veg/buyerpages/Cart/model_cart.dart';
 import 'package:veg/googlemapscreens/current_location_screen.dart';
-import 'package:veg/buyerpages/view_vegetable.dart';
+import 'package:veg/buyerpages/order/view_veg_seller.dart';
 import '../buyerpages/Widgets/appbarwidget.dart';
 import '../buyerpages/Widgets/categorieswidget.dart';
-//import 'package:veg/buyerpages/Cart/ViewOrder.dart';
 
 class HomePageBuyer extends StatefulWidget {
   const HomePageBuyer({super.key});
