@@ -4,6 +4,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:veg/sellerpages/add_item_page.dart';
 import 'package:veg/sellerpages/map/seller_location.dart';
 import 'package:veg/sellerpages/view_order/view_orders_page.dart';
+import 'package:veg/sellerpages/bottom_nav_bar/bottom_nav_bar.dart';
+
+
 
 class HomePageSeller extends StatefulWidget {
   const HomePageSeller({super.key});
@@ -15,6 +18,7 @@ class HomePageSeller extends StatefulWidget {
 class _HomePageSellerState extends State<HomePageSeller> {
   String? sellerId;
   String? firstName;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -43,96 +47,113 @@ class _HomePageSellerState extends State<HomePageSeller> {
     }
   }
 
+
+  void _onTabChange(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home',), // Greet the seller by name
+      appBar: _selectedIndex == 0
+          ? AppBar(
+        title: const Text('Home'),
         backgroundColor: Colors.green,
+      )
+          : null,
+      bottomNavigationBar: MyBottomNavBar(
+        onTabChange: _onTabChange,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+
+      body: IndexedStack(
+        index: _selectedIndex,
         children: [
-          // Welcome Message
-           Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: Text(firstName != null ? 'Welcome, $firstName' : 'Welcome',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-
-            ),
-          ),
-
-          // Location Box
-          GestureDetector(
-            onTap: () {
-              // Navigate to another page when tapped
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MapPageSeller(), // Replace with your location page
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.green),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.location_on, color: Colors.green),
-                  SizedBox(width: 10), // Add spacing between the icon and text
-                  Text(
-                    'Your Location',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Button Container
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildButton(
-                  imagePath: 'assets/images/buyer_homepage/vegetables.jpeg',
-                  label: 'Start',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddItemsPage(),
-                      ),
-                    );
-                  },
-                ),
-                _buildButton(
-                  imagePath: 'assets/images/buyer_homepage/vegetables.jpeg',
-                  label: 'View Orders',
-                  onPressed: () {
-                    // Pass the sellerId to ViewOrdersPage
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ViewOrdersPage(sellerId: sellerId!), // Ensure sellerId is not null
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
+          _buildHomePageContent(),
+          const MapPageSeller(),
+          const AddItemsPage(),
+          ViewOrdersPage(sellerId: sellerId ?? ''),
         ],
       ),
     );
   }
+
+  Widget _buildHomePageContent() {
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        // Welcome Message
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Text(firstName != null ? 'Welcome, $firstName' : 'Welcome',
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+
+          ),
+        ),
+
+        // Location Box
+        GestureDetector(
+          onTap: () {
+            // Navigate to another page when tapped
+            setState(() {
+              _selectedIndex = 1; // Switch to AddItemsPage
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.green),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.location_on, color: Colors.green),
+                SizedBox(width: 10), // Add spacing between the icon and text
+                Text(
+                  'Your Location',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // Button Container
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildButton(
+                imagePath: 'assets/images/buyer_homepage/vegetables.jpeg',
+                label: 'Add item',
+                onPressed: () {
+                  setState(() {
+                    _selectedIndex = 2; // Switch to AddItemsPage
+                  });
+                },
+              ),
+              _buildButton(
+                imagePath: 'assets/images/buyer_homepage/vegetables.jpeg',
+                label: 'View Orders',
+                onPressed: () {
+                  // Pass the sellerId to ViewOrdersPage
+                  setState(() {
+                    _selectedIndex = 3; // Switch to AddItemsPage
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+      );
+     }
+
 
   // Helper method to build button
   Widget _buildButton({

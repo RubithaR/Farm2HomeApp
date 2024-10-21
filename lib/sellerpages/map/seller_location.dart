@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:geolocator/geolocator.dart'; // For location services
 import 'dart:math';
+import 'package:veg/shortest_path/dijkstra.dart';
+import 'package:veg/shortest_path/real_path.dart'; // Import Dijkstra implementation
 
 class MapPageSeller extends StatefulWidget {
   const MapPageSeller({super.key});
@@ -17,56 +20,61 @@ class MapPageSellerState extends State<MapPageSeller> {
   LatLng _currentLocation = const LatLng(0.0, 0.0);
   bool _locationFetched = false;
   String? uid;
-  List<LatLng> _buyerLocations = []; // Store all buyer locations
-  Map<MarkerId, Marker> userMarkers = {}; // Store markers for buyers and sellers
+  List<LatLng> _buyerLocations = [];
+  Map<MarkerId, Marker> userMarkers = {};
+  PolylinePoints polylinePoints = PolylinePoints();
+  List<LatLng> polylineCoordinates = [];
+  Map<String, LatLng> locationMap = {};
+  final Graph _graph = Graph();
+
+  late DatabaseReference ordersRef;
 
   @override
   void initState() {
     super.initState();
-    _getUserLocationFromDatabase(); // Retrieve seller's location from Firebase
+    _getUserLocationFromDatabase();
   }
 
-  // Fetch the seller's location from Firebase Realtime Database on login
+  // Fetch the seller's location from Firebase Realtime Database
   Future<void> _getUserLocationFromDatabase() async {
-    uid = FirebaseAuth.instance.currentUser?.uid; // Get seller's UID
-    print("Current Seller ID: $uid"); // Print current seller ID
+    uid = FirebaseAuth.instance.currentUser?.uid;
+    print("Current Seller ID: $uid");
 
     if (uid != null) {
       DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(uid!);
-
-      // Fetch the current location saved in Firebase
       DatabaseEvent event = await userRef.once();
 
       if (event.snapshot.exists) {
         Map<dynamic, dynamic>? userData = event.snapshot.value as Map<dynamic, dynamic>?;
-
         if (userData != null && userData['location'] != null) {
           setState(() {
             _currentLocation = LatLng(
               userData['location']['latitude'] ?? 0.0,
               userData['location']['longitude'] ?? 0.0,
             );
-            _locationFetched = true; // Mark that location has been fetched
+            _locationFetched = true;
+            _addCurrentLocationMarker(); // Add seller location marker
           });
-          _fetchBuyerLocations(); // Fetch buyer locations
+          _fetchBuyerLocations();
         } else {
-          _getCurrentLocation(); // Fetch the device's current location if not found in Firebase
+          _getCurrentLocation();
         }
       } else {
-        _getCurrentLocation(); // Fetch the device's current location if no user data exists in Firebase
+        _getCurrentLocation();
       }
     }
   }
 
-  // Fetch the seller's current device location if no location is found in Firebase
+  // Fetch the current device location if no location is found in Firebase
   Future<void> _getCurrentLocation() async {
     try {
       Position position = await getCurrentLocation();
       setState(() {
         _currentLocation = LatLng(position.latitude, position.longitude);
-        _locationFetched = true; // Mark that location has been fetched
+        _locationFetched = true;
+        _addCurrentLocationMarker(); // Add seller location marker after fetching
       });
-      _updateLocationInFirebase(_currentLocation); // Save the newly fetched location in Firebase
+      _updateLocationInFirebase(_currentLocation);
     } catch (e) {
       print("Error fetching location: $e");
     }
@@ -74,17 +82,13 @@ class MapPageSellerState extends State<MapPageSeller> {
 
   // Get the current location using Geolocator
   Future<Position> getCurrentLocation() async {
-    // Check location permission
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      // If permission is denied, request permission
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         throw Exception("Location permission denied");
       }
     }
-
-    // Get the current position
     return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
   }
 
@@ -101,144 +105,313 @@ class MapPageSellerState extends State<MapPageSeller> {
     }
   }
 
-  // Fetch the buyer's location from Firebase Realtime Database
-  Future<void> _fetchBuyerLocations() async {
+  // Add a marker for the seller's current location
+  // Add a marker for the seller's current location
+  void _addCurrentLocationMarker() {
+    Marker sellerMarker = Marker(
+      markerId: const MarkerId('currentLocation'),
+      position: _currentLocation,
+      draggable: true, // Allow marker to be draggable
+      onDragEnd: (newPosition) {
+        // When the dragging ends, update the position
+        _onMarkerDragged(newPosition); // Call a separate method to handle updating location
+      },
+      infoWindow: const InfoWindow(title: 'Your location'),
+    );
+
+    // Update the marker on the map
+    setState(() {
+      userMarkers[MarkerId('currentLocation')] = sellerMarker;
+    });
+  }
+
+  void _onMarkerDragged(LatLng newPosition) {
+    setState(() {
+      _currentLocation = newPosition; // Update the current location state
+    });
+    _updateLocationInFirebase(newPosition); // Save the updated location in Firebase
+  }
+
+  void _onMapTap(LatLng tappedPoint) {
+    setState(() {
+      _currentLocation = tappedPoint; // Update to the new tapped location
+    });
+    _addCurrentLocationMarker(); // Add or update the marker at the tapped point
+    _updateLocationInFirebase(tappedPoint); // Save the new location to Firebase
+  }
+
+
+
+
+
+
+
+
+  // Save the route for each buyer
+  Future<void> _saveOrder(String buyerId, List<LatLng> routeCoordinates) async {
     if (uid != null) {
-      DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child("final_order");
+      DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child("paths").child(uid!).child(buyerId);
 
-      // Fetch all orders
-      DatabaseEvent event = await ordersRef.once();
+      // Prepare route details (only the buyer's location and seller's ID)
+      Map<String, dynamic> orderDetails = {
+        'route': routeCoordinates.map((latLng) => {
+          'latitude': latLng.latitude,
+          'longitude': latLng.longitude,
+        }).toList(),
+        'buyerId': buyerId,
+        'timestamp': ServerValue.timestamp,
+      };
 
-      if (event.snapshot.exists) {
-        Map<dynamic, dynamic>? ordersData = event.snapshot.value as Map<dynamic, dynamic>?;
+      // Save or overwrite the order for the buyer
+      await ordersRef.set(orderDetails);
+      print("Order saved for buyer: $buyerId");
+    }
+  }
 
-        if (ordersData != null) {
-          // Loop through each buyer (buyer_uid)
-          for (var buyerId in ordersData.keys) {
-            var sellerData = ordersData[buyerId];
+  // Find the shortest route to all buyers
+  // Add this function in your MapPageSellerState class
+  // Method to calculate the shortest path to all buyers
+  void _findShortestRouteToAllBuyers() {
+    print("Finding the shortest path to all buyers...");
 
-            if (sellerData is Map) {
-              // Check if there are orders under this buyer
-              for (var orderEntry in sellerData.entries) {
-                var orderSellerUid = orderEntry.key; // This is the seller UID
+    if (uid != null && locationMap.isNotEmpty) {
+      // Add current location to the list
+      List<LatLng> routePoints = [_currentLocation];
 
-                // Compare the current seller's UID with the seller UID from the order
-                if (uid == orderSellerUid) {
-                  // Get the buyer's location and add to the list
-                  LatLng? buyerLocation = await _getBuyerLocation(buyerId);
-                  if (buyerLocation != null) {
-                    setState(() {
-                      _buyerLocations.add(buyerLocation); // Add buyer's location to the list
-                    });
+      // Set of unvisited buyer locations
+      Set<String> unvisitedBuyers = locationMap.keys.toSet();
+
+      LatLng currentLocation = _currentLocation;
+
+      while (unvisitedBuyers.isNotEmpty) {
+        // Find the nearest unvisited buyer
+        String nearestBuyerId = unvisitedBuyers.first;
+        double minDistance = _calculateDistance(currentLocation, locationMap[nearestBuyerId]!);
+
+        for (String buyerId in unvisitedBuyers) {
+          double distance = _calculateDistance(currentLocation, locationMap[buyerId]!);
+          if (distance < minDistance) {
+            minDistance = distance;
+            nearestBuyerId = buyerId;
+          }
+        }
+
+        // Move to the nearest buyer
+        LatLng nearestBuyerLocation = locationMap[nearestBuyerId]!;
+        routePoints.add(nearestBuyerLocation);
+
+        // Update current location to nearest buyer's location
+        currentLocation = nearestBuyerLocation;
+
+        // Mark the nearest buyer as visited
+        unvisitedBuyers.remove(nearestBuyerId);
+
+        // Save the order for the current buyer
+        _saveOrder(nearestBuyerId, routePoints);
+      }
+
+      // Draw the polyline for the shortest path
+      _drawPolyline(routePoints);
+      print("Shortest path to all buyers calculated successfully.");
+    } else {
+      print("No buyers found or map not initialized.");
+    }
+  }
+
+  // Generate permutations of buyer indices
+  List<List<int>> _getPermutations(List<int> nums) {
+    if (nums.length == 1) return [nums];
+
+    List<List<int>> allPermutations = [];
+    for (var i = 0; i < nums.length; i++) {
+      var remaining = List<int>.from(nums)..removeAt(i);
+      for (var perm in _getPermutations(remaining)) {
+        allPermutations.add([nums[i]] + perm);
+      }
+    }
+
+    return allPermutations;
+  }
+
+  // Calculate the total distance for a given route
+  double _calculateRouteDistance(List<LatLng> locations, List<int> route) {
+    double totalDistance = 0.0;
+
+    for (var i = 0; i < route.length; i++) {
+      LatLng start = locations[route[i]];
+      LatLng end = locations[route[(i + 1) % route.length]];
+      totalDistance += _calculateDistance(start, end);
+    }
+
+    return totalDistance;
+  }
+
+  // Fetch buyer locations from Firebase
+  void _fetchBuyerLocations() async {
+    if (uid != null) {
+      ordersRef = FirebaseDatabase.instance.ref().child("final_order");
+      ordersRef.onValue.listen((DatabaseEvent event) async {
+        if (event.snapshot.exists) {
+          Map<dynamic, dynamic>? ordersData = event.snapshot.value as Map<dynamic, dynamic>?;
+
+          if (ordersData != null) {
+            setState(() {
+              userMarkers.clear(); // Clear old markers
+              _addCurrentLocationMarker(); // Re-add seller location marker
+              _buyerLocations.clear();
+            });
+
+            List<Future<void>> futures = [];
+
+            for (var buyerId in ordersData.keys) {
+              var sellerData = ordersData[buyerId];
+              if (sellerData is Map) {
+                for (var orderEntry in sellerData.entries) {
+                  var orderSellerUid = orderEntry.key;
+                  if (uid == orderSellerUid) {
+                    futures.add(_getBuyerLocation(buyerId).then((buyerLocation) {
+                      if (buyerLocation != null) {
+                        setState(() {
+                          _buyerLocations.add(buyerLocation);
+                          locationMap[buyerId] = buyerLocation;
+                          double distance = _calculateDistance(_currentLocation, buyerLocation);
+                          _graph.addEdge(buyerId, uid!, distance);
+                        });
+                      }
+                    }));
                   }
                 }
               }
             }
+
+            await Future.wait(futures);
+
+            if (_buyerLocations.isNotEmpty) {
+              _findShortestRouteToAllBuyers();
+            }
           }
-        } else {
-          print("No orders found.");
         }
-      }
-    } else {
-      print("Current seller UID is null.");
+      });
     }
   }
 
-  // Fetch a specific buyer's location using their ID
+  // Fetch the buyer's location from Firebase
   Future<LatLng?> _getBuyerLocation(String buyerId) async {
     DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(buyerId);
     DatabaseEvent event = await usersRef.once();
-
     if (event.snapshot.exists) {
       Map<dynamic, dynamic>? userData = event.snapshot.value as Map<dynamic, dynamic>?;
-
       if (userData != null && userData['location'] != null) {
-        String buyerName = userData['firstname'] ?? "Unknown"; // Assuming you have 'firstname' in your user data
-
         LatLng buyerLocation = LatLng(
           userData['location']['latitude'] ?? 0.0,
           userData['location']['longitude'] ?? 0.0,
         );
 
-        double distance = _calculateDistance(_currentLocation, buyerLocation);
-        if (distance <= 10.0) { // Filter buyers within 5 km
-          BitmapDescriptor markerIcon = await BitmapDescriptor.fromAssetImage(
-            const ImageConfiguration(size: Size(67, 67)), // Adjust the size as needed
-            'assets/images/home.png', // Use the custom icon
-          );
-
-          MarkerId markerId = MarkerId(buyerId);
-          Marker marker = Marker(
-            markerId: markerId,
-            position: buyerLocation,
-            icon: markerIcon,
-            infoWindow: InfoWindow(title: "Buyer: $buyerName"),
-          );
-
-          setState(() {
-            userMarkers[markerId] = marker; // Add buyer marker to map
-          });
-
-          return buyerLocation;
-        }
+        BitmapDescriptor markerIcon = await BitmapDescriptor.fromAssetImage(
+          const ImageConfiguration(size: Size(67, 67)),
+          'assets/images/home.png',
+        );
+        MarkerId markerId = MarkerId(buyerId);
+        Marker marker = Marker(
+          markerId: markerId,
+          position: buyerLocation,
+          icon: markerIcon,
+          infoWindow: InfoWindow(title: "Buyer: ${userData['firstname']}"),
+        );
+        setState(() {
+          userMarkers[markerId] = marker;
+        });
+        return buyerLocation;
       }
     }
     return null;
   }
 
-  // Calculate the distance between the seller and buyer locations
+  // Calculate the great circle distance between two LatLng points (Haversine formula)
   double _calculateDistance(LatLng start, LatLng end) {
-    const earthRadius = 6371; // Radius of the Earth in km
-    double dLat = _degreesToRadians(end.latitude - start.latitude);
-    double dLng = _degreesToRadians(end.longitude - start.longitude);
+    const earthRadius = 6371000.0; // in meters
+    double lat1 = _degreesToRadians(start.latitude);
+    double lon1 = _degreesToRadians(start.longitude);
+    double lat2 = _degreesToRadians(end.latitude);
+    double lon2 = _degreesToRadians(end.longitude);
+    double dLat = lat2 - lat1;
+    double dLon = lon2 - lon1;
+
     double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_degreesToRadians(start.latitude)) *
-            cos(_degreesToRadians(end.latitude)) *
-            sin(dLng / 2) *
-            sin(dLng / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
+    double c = 2 *
+        atan2(sqrt(a), sqrt(1 - a));
     return earthRadius * c;
   }
 
+  // Convert degrees to radians
   double _degreesToRadians(double degrees) {
     return degrees * pi / 180;
   }
 
-  // When the user taps on the map, update the marker and Firebase with the new location
-  void _onMapTap(LatLng tappedLocation) {
+  // Draw polyline on the map based on route coordinates
+  void _drawPolyline(List<LatLng> routeCoordinates) async {
     setState(() {
-      _currentLocation = tappedLocation; // Set new location on the map
+      polylineCoordinates.clear();
+      polylineCoordinates.addAll(routeCoordinates);
     });
-    _updateLocationInFirebase(tappedLocation); // Update the location in Firebase
   }
+
+  // Update marker position after dragging
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _locationFetched
-          ? GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: _currentLocation, // Set initial camera position to the fetched location
-          zoom: 14,
-        ),
-        markers: {
-          Marker(
-            markerId: const MarkerId('currentLocation'),
-            position: _currentLocation,
-            draggable: true, // Allow user to drag marker
-            onDragEnd: (newPosition) {
-              _onMapTap(newPosition); // Update location after dragging
-            },
-            infoWindow: const InfoWindow(title: 'Your location'),
+      body: Stack(
+        children: [
+          _locationFetched
+            ? GoogleMap(
+          onMapCreated: (GoogleMapController controller) {
+            mapController = controller;
+          },
+          initialCameraPosition: CameraPosition(
+            target: _currentLocation,
+            zoom: 14.0,
           ),
-          ...userMarkers.values.toSet(), // Add dynamically fetched buyer markers
-        },
-        onMapCreated: (GoogleMapController controller) {
-          mapController = controller;
-        },
-        onTap: _onMapTap, // Update location when map is tapped
-      )
-          : const Center(child: CircularProgressIndicator()), // Show loading spinner while fetching location
+          onTap: (LatLng tappedPoint) {
+            _onMapTap(tappedPoint); // Call the _onMapTap function when the map is tapped
+          },
+          markers: Set<Marker>.of(userMarkers.values),
+          polylines: {
+            Polyline(
+              polylineId: const PolylineId("route"),
+              points: polylineCoordinates,
+              color: Colors.red,
+              width: 4,
+            ),
+          },
+        )
+
+
+
+            : const Center(
+          child: CircularProgressIndicator(),
+        ),
+// The Start button on the left side
+          Positioned(
+            left: 16.0, // Adjust this value for precise positioning
+            bottom: 20.0, // Distance from the bottom of the screen
+            child: FloatingActionButton(
+              onPressed: () {
+                // Handle button press
+                // You can add any function call here to start route tracking, etc.
+              },
+              child: const Icon(Icons.play_arrow),
+              backgroundColor: Colors.green,
+            ),
+          ),
+
+
+
+
+       ],
+      ),
     );
   }
 }

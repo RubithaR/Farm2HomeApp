@@ -7,16 +7,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 class CheckLocation extends StatefulWidget {
   final double latitude; // Seller's latitude
   final double longitude; // Seller's longitude
-  final String sellerUID; // Seller's unique ID
-  final String sellerName;
+  final String sellerName ;
 
-  const CheckLocation({
-    super.key,
-    required this.latitude,
-    required this.longitude,
-    required this.sellerUID,
-    required this.sellerName,
-  });
+  const CheckLocation({super.key, required this.latitude, required this.longitude, required this.sellerName});
 
   @override
   State<CheckLocation> createState() => _CheckLocationState();
@@ -24,28 +17,25 @@ class CheckLocation extends StatefulWidget {
 
 class _CheckLocationState extends State<CheckLocation> {
   LatLng _currentLocation = const LatLng(0.0, 0.0); // Buyer's current location
-  LatLng _sellerLocation = const LatLng(0.0, 0.0); // Seller's updated location
   bool _locationFetched = false;
   String? uid;
   GoogleMapController? mapController;
-  BitmapDescriptor? sellerIcon;
-  DatabaseReference? sellerRef;
+  BitmapDescriptor? sellerIcon; // Declare sellerIcon here
 
   @override
   void initState() {
     super.initState();
-    _loadSellerIcon(); // Load the custom seller icon
-    _getUserLocationFromDatabase(); // Fetch buyer's location
-    _trackSellerLocation(); // Start tracking seller's location in real-time
+    _loadSellerIcon(); // Load the custom icon
+    _getUserLocationFromDatabase(); // Fetch buyer's location from the database
   }
 
-  // Load the custom seller icon
+  // Load the seller icon
   Future<void> _loadSellerIcon() async {
     sellerIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48, 48)),
+      const ImageConfiguration(size: Size(48, 48)), // Adjust the size as needed
       'assets/images/van_image.png',
     );
-    setState(() {}); // Rebuild the widget once the icon is loaded
+    setState(() {}); // Call setState to rebuild the widget once the icon is loaded
   }
 
   // Fetch the buyer's location from Firebase
@@ -67,7 +57,7 @@ class _CheckLocationState extends State<CheckLocation> {
             _locationFetched = true;
           });
         } else {
-          _getCurrentLocation(); // If no location is saved, get the current location
+          _getCurrentLocation(); // If no location is saved, get current location
         }
       } else {
         _getCurrentLocation(); // If no user data, get current location
@@ -89,7 +79,6 @@ class _CheckLocationState extends State<CheckLocation> {
     }
   }
 
-  // Function to get the current position of the buyer
   Future<Position> getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -123,33 +112,12 @@ class _CheckLocationState extends State<CheckLocation> {
     }
   }
 
-  // Track the seller's location from Firebase in real-time
-  Future<void> _trackSellerLocation() async {
-    sellerRef = FirebaseDatabase.instance.ref().child('sellers').child(widget.sellerUID);
-
-    sellerRef!.child('location').onValue.listen((DatabaseEvent event) {
-      if (event.snapshot.exists) {
-        Map<dynamic, dynamic> sellerLocationData = event.snapshot.value as Map<dynamic, dynamic>;
-        if (sellerLocationData['latitude'] != null && sellerLocationData['longitude'] != null) {
-          setState(() {
-            _sellerLocation = LatLng(
-              sellerLocationData['latitude'],
-              sellerLocationData['longitude'],
-            );
-            print("Seller location updated to: $_sellerLocation"); // Debugging
-          });
-        } else {
-          print("Seller location data is incomplete: $sellerLocationData"); // Debugging
-        }
-      } else {
-        print("Seller location snapshot does not exist."); // Debugging
-      }
-    });
-  }
-
-  // Build the Google Map with buyer and seller markers
+  // Display the map with only the buyer's and seller's locations
   @override
   Widget build(BuildContext context) {
+    // Seller's location from navigation arguments
+    LatLng sellerLocation = LatLng(widget.latitude, widget.longitude);
+
     return Scaffold(
       body: _locationFetched
           ? GoogleMap(
@@ -162,20 +130,20 @@ class _CheckLocationState extends State<CheckLocation> {
           Marker(
             markerId: const MarkerId('buyerLocation'),
             position: _currentLocation,
-            draggable: true,
+            draggable: true, // Allow dragging to update location
             onDragEnd: (newPosition) {
               setState(() {
                 _currentLocation = newPosition;
               });
-              _updateLocationInFirebase(newPosition);
+              _updateLocationInFirebase(newPosition); // Update the new location in Firebase
             },
             infoWindow: const InfoWindow(title: 'Your location'),
           ),
-          // Seller's location marker
+          // Seller's location marker with custom image
           Marker(
             markerId: const MarkerId('sellerLocation'),
-            position: _sellerLocation, // Updated in real-time
-            icon: sellerIcon ?? BitmapDescriptor.defaultMarker,
+            position: sellerLocation,
+            icon: sellerIcon ?? BitmapDescriptor.defaultMarker, // Use your custom image or a default if not loaded
             infoWindow: InfoWindow(title: widget.sellerName),
           ),
         },
@@ -186,10 +154,10 @@ class _CheckLocationState extends State<CheckLocation> {
           setState(() {
             _currentLocation = tappedLocation;
           });
-          _updateLocationInFirebase(tappedLocation);
+          _updateLocationInFirebase(tappedLocation); // Update location when map is tapped
         },
       )
-          : const Center(child: CircularProgressIndicator()), // Show a loading spinner until the location is fetched
+          : const Center(child: CircularProgressIndicator()), // Show a spinner while fetching location
     );
   }
 }

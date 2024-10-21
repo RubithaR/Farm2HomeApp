@@ -45,243 +45,207 @@ class _AddItemsPageState extends State<AddItemsPage> {
         .child(currentFirebaseUser!.uid)
         .child("vegetable_details");
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        title: const Text(
-          'Add Items',
-          style: TextStyle(fontSize: 20.0, color: Colors.white),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.home_filled),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePageSeller()),
-              );
-            },
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus(); // Unfocus all text fields
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.green,
+          title: const Text(
+            'Add Items',
+            style: TextStyle(fontSize: 20.0, color: Colors.black),
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
-            child: Container(
-              width: double.infinity,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 2,
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    const Icon(
-                      CupertinoIcons.search,
-                      color: Colors.green,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextFormField(
-                        decoration: const InputDecoration(
-                          hintText: "Search Item",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Icon(
-                      Icons.filter_list,
-                      color: Colors.green,
+
+        ),
+        body: Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+              child: Container(
+                width: double.infinity,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 2,
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-              ),
-            ),
-          ),
-
-          // Added Items List or No Data message
-          Expanded(
-            child: FirebaseAnimatedList(
-              query: ref,
-              defaultChild: const Center(
-                child: CircularProgressIndicator(), // Show loader while data is loading
-              ),
-              itemBuilder: (BuildContext context, DataSnapshot snapshot,
-                  Animation<double> animation, int index) {
-                if (snapshot.exists) {
-                  Map item = snapshot.value as Map;
-                  return Container(
-                    margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                    width: double.infinity,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
-                          spreadRadius: 2,
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-
-                      child: ListTile(
-                        title: Text(
-                          item['name_veg'].toString(),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold, // Bold text for vegetable name
-                            fontSize: 18, // Increase font size for vegetable name
-                          ),),
-                        subtitle: RichText(
-                          text: TextSpan(
-                            children: [
-                              const TextSpan(
-                                text: "Price per kg: ",
-                                style: TextStyle(color: Colors.black), // Normal text
-                              ),
-                              TextSpan(
-                                text: "${item['price']} Rs", // Bold price amount with Rs
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                              ),
-
-
-                              const TextSpan(
-                                text: ", Available Quantity: ", // Normal quantity
-                                style:  TextStyle(color: Colors.black),
-                              ),
-                              TextSpan(
-                                text: "${item['quantity']} kg", // Bold price amount with Rs
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                              ),
-
-                            ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        CupertinoIcons.search,
+                        color: Colors.green,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextFormField(
+                          decoration: const InputDecoration(
+                            hintText: "Search Item",
+                            border: InputBorder.none,
                           ),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.update, color: Colors.green),
-                              onPressed: () {
-                                // Handle update functionality
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => VegetableUpdate(
-                                      itemId: snapshot.key!,
-                                      name: item['name_veg'],
-                                      price: item['price'],
-                                      quantity: item['quantity'],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                ref.child(snapshot.key!).remove();
-                              },
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
-                  );
-                } else {
-                  return const Center(
-                    child: Text('No Data Found'),
-                  );
-                }
-              },
-            ),
-          ),
-
-          // Add more items button
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
-            child: Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.5),
-                        spreadRadius: 2,
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
+                      const SizedBox(width: 10),
+                      const Icon(
+                        Icons.filter_list,
+                        color: Colors.green,
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            decoration: const InputDecoration(
-                              hintText: "ADD ITEM",
-                              hintStyle: TextStyle(
-                                  fontSize: 17, fontWeight: FontWeight.w700),
-                              border: InputBorder.none,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: TextButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                  const VegetableOne(),
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.add,
-                              color: Colors.white,
-                            ),
-                            label: const Text(
-                              'Add',
-                              style:
-                              TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+
+            // Added Items List or No Data message
+            Expanded(
+              child: FirebaseAnimatedList(
+                query: ref,
+                defaultChild: const Center(
+                  child: CircularProgressIndicator(), // Show loader while data is loading
+                ),
+                itemBuilder: (BuildContext context, DataSnapshot snapshot,
+                    Animation<double> animation, int index) {
+                  if (snapshot.exists) {
+                    Map item = snapshot.value as Map;
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                      width: double.infinity,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 2,
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+
+                        child: ListTile(
+                          title: Text(
+                            item['name_veg'].toString(),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold, // Bold text for vegetable name
+                              fontSize: 18, // Increase font size for vegetable name
+                            ),),
+                          subtitle: RichText(
+                            text: TextSpan(
+                              children: [
+                                const TextSpan(
+                                  text: "Price per kg: ",
+                                  style: TextStyle(color: Colors.black), // Normal text
+                                ),
+                                TextSpan(
+                                  text: "${item['price']} Rs", // Bold price amount with Rs
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                ),
+
+
+                                const TextSpan(
+                                  text: ", Available Quantity: ", // Normal quantity
+                                  style:  TextStyle(color: Colors.black),
+                                ),
+                                TextSpan(
+                                  text: "${item['quantity']} kg", // Bold price amount with Rs
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                ),
+
+                              ],
+                            ),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.update, color: Colors.green),
+                                onPressed: () {
+                                  // Handle update functionality
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => VegetableUpdate(
+                                        itemId: snapshot.key!,
+                                        name: item['name_veg'],
+                                        price: item['price'],
+                                        quantity: item['quantity'],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  ref.child(snapshot.key!).remove();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  } else {
+                    return const Center(
+                      child: Text('No Data Found'),
+                    );
+                  }
+                },
+              ),
+            ),
+
+            // Add more items button
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            child: TextButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                    const VegetableOne(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                              ),
+                              label: const Text(
+                                'Add ',
+                                style:
+                                TextStyle(fontSize: 20, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

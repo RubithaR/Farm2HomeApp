@@ -65,10 +65,7 @@ class _VegetableOneState extends State<VegetableOne> {
           _nameVegController.clear();
 
           // Navigate to AddItemsPage
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddItemsPage()),
-          );
+          Navigator.pop(context);
         }).catchError((error) {
           // Handle errors (e.g., network issues)
           ScaffoldMessenger.of(context).showSnackBar(
@@ -89,6 +86,7 @@ class _VegetableOneState extends State<VegetableOne> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
+        automaticallyImplyLeading: false, // Add this line to remove the back arrow
         title: const Text(
           'Vegetable',
           style: TextStyle(fontSize: 20.0, color: Colors.white),
@@ -192,11 +190,7 @@ class _VegetableOneState extends State<VegetableOne> {
                       height: 43.0,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const AddItemsPage()),
-                          );
+                          Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,

@@ -73,6 +73,7 @@ class _VegetableUpdateState extends State<VegetableUpdate> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
+        automaticallyImplyLeading: false, // Add this line to remove the back arrow
         title: const Text(
           'Update Vegetable',
           style: TextStyle(fontSize: 20.0, color: Colors.white),

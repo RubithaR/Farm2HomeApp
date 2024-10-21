@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:veg/sellerpages/view_order/check_location_page.dart';
 
-class ViewOrdersPage extends StatefulWidget {
+class OldOrdersSeller extends StatefulWidget {
   final String sellerId; // Seller's UID
 
-  const ViewOrdersPage({super.key, required this.sellerId});
+  const OldOrdersSeller({super.key, required this.sellerId});
 
   @override
-  State<ViewOrdersPage> createState() => _ViewOrdersPageState();
+  State<OldOrdersSeller> createState() => _OldOrdersSellerState();
 }
 
-class _ViewOrdersPageState extends State<ViewOrdersPage> {
+class _OldOrdersSellerState extends State<OldOrdersSeller> {
   final DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child("final_order");
   final DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users");
 
@@ -59,16 +59,16 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
             if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
               return const Center(child: Text("No orders available."));
             }
-      
+
             Map<dynamic, dynamic>? allOrders = snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
-      
+
             // Map to group orders by buyer ID
             Map<String, List<Map<String, dynamic>>> groupedOrders = {};
-      
+
             if (allOrders == null || allOrders.isEmpty) {
               return const Center(child: Text("No orders found here."));
             }
-      
+
             // Group orders by buyer ID
             allOrders.forEach((buyerId, buyerOrders) {
               buyerOrders.forEach((sellerId, sellerOrders) {
@@ -83,7 +83,7 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                         'buyer_id': orderDetails['buyer_id'] ?? 'Unknown',
                         'payment': orderDetails['payment'] ?? {}, // Safely include payment details
                       };
-      
+
                       // Add the order to the appropriate buyer
                       if (!groupedOrders.containsKey(buyerId)) {
                         groupedOrders[buyerId] = [];
@@ -94,7 +94,7 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                 }
               });
             });
-      
+
             // Fetch user details for all buyers in a separate future
             return FutureBuilder<Map<String, Map<String, dynamic>>>( // Future to fetch user details
               future: fetchUserDetails(groupedOrders.keys.toList()),
@@ -107,16 +107,16 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                     child: Text("Error fetching user details: ${userSnapshot.error}"),
                   );
                 }
-      
+
                 // Create a list of widgets to display orders grouped by buyer
                 List<Widget> orderWidgets = groupedOrders.entries.map((entry) {
                   String buyerId = entry.key;
                   List<Map<String, dynamic>> orders = entry.value;
-      
+
                   // Calculate total price for this buyer
                   double buyerTotal = 0.0;
                   String paymentType = 'Unknown'; // Initialize paymentType
-      
+
                   for (var order in orders) {
                     buyerTotal += (order['total_price'] as num).toDouble();
                     // Extracting payment type from order details
@@ -127,13 +127,13 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                       }
                     }
                   }
-      
+
                   // Retrieve user details for this buyer
                   Map<String, dynamic>? userDetails = userSnapshot.data![buyerId];
                   String buyerName = userDetails?['firstname'] ?? 'Unknown';
                   String buyerPhone = userDetails?['phone'] ?? 'Unknown';
                   String district = userDetails?['district'] ?? 'Unknown';
-      
+
                   return Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
@@ -152,7 +152,7 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                             Text("Phone: $buyerPhone", style: const TextStyle(fontSize: 16)),
                             Text("District: $district", style: const TextStyle(fontSize: 16.0)),
                             const Divider(thickness: 1, color: Colors.green),
-      
+
                             const SizedBox(height: 10), // Space between buyer details and orders
                             ...orders.map((order) {
                               return ListTile(
@@ -163,9 +163,9 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                               );
                             }),
                             const Divider(thickness: 1, color: Colors.green),
-      
+
                             const SizedBox(height: 10), // Space between orders and total
-      
+
                             Container(
                               padding: const EdgeInsets.all(8.0),
                               decoration: BoxDecoration(
@@ -182,7 +182,7 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                                         fontSize: 16.0, fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 10.0),
-      
+
                                   // Display payment type below the total price
                                   Text(
                                     "Payment Type: $paymentType", // Use the local paymentType variable
@@ -192,13 +192,13 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                                 ],
                               ),
                             ),
-      
+
                             ElevatedButton(
                               onPressed: () {
                                 // Retrieve the location from user details
                                 double? buyerLatitude = userDetails?['location']?['latitude'];
                                 double? buyerLongitude = userDetails?['location']?['longitude'];
-      
+
                                 // Ensure the buyer has a location before navigating
                                 if (buyerLatitude != null && buyerLongitude != null) {
                                   Navigator.push(
@@ -220,8 +220,8 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                               },
                               child: const Text("View on Map"),
                             ),
-      
-      
+
+
                             const SizedBox(height: 10),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end, // Align the button to the right
@@ -229,6 +229,7 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                                 ElevatedButton(
                                   onPressed: () {
                                     // Navigate to the CheckoutOrder page with buyer's details
+
                                   },
                                   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                                   child: const Text(
@@ -244,11 +245,11 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                     ),
                   );
                 }).toList();
-      
+
                 if (orderWidgets.isEmpty) {
                   return const Center(child: Text("No orders found for this seller."));
                 }
-      
+
                 return SingleChildScrollView(
                   child: Column(
                     children: orderWidgets,

@@ -40,7 +40,7 @@ class MapPageState extends State<MapPage> {
           );
 
           double distance = _calculateDistance(_currentLocation, sellerLocation);
-          if (distance <= 5.0) { // Filter sellers within 5 km
+          if (distance <= 100.0) { // Filter sellers within 5 km
             // Use the new method with ImageConfiguration
             BitmapDescriptor markerIcon = await BitmapDescriptor.fromAssetImage(
               const ImageConfiguration(size: Size(48, 48)), // You can adjust the size as needed

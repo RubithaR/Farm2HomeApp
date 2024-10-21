@@ -242,8 +242,7 @@ class _ViewPaymentsPageState extends State<ViewPaymentsPage> {
                                 builder: (context) => CheckLocation(
                                   latitude: latitude,
                                   longitude: longitude,
-                                  sellerUID: sellerId ,
-                                  sellerName: sellerName,
+                                  sellerName: sellerName
                                 ),
                               ),
                             );

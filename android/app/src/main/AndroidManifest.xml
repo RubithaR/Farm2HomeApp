@@ -10,8 +10,10 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
-        <meta-data android:name="com.google.android.geo.API_KEY"
-            android:value="@string/GOOGLE_MAPS_API_KEY"/>
+        <!-- Add your Google Maps API Key directly -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyA9GskZpUFgljTermxTw-HVE3O6g_GtlIc" />
 
         <activity
             android:name=".MainActivity"
@@ -24,8 +26,7 @@
             android:windowSoftInputMode="adjustResize">
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
-                android:resource="@style/NormalTheme"
-                />
+                android:resource="@style/NormalTheme" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -35,7 +36,7 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        
+
     </application>
 
     <queries>
