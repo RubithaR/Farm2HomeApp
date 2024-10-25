@@ -218,34 +218,6 @@ class MapPageSellerState extends State<MapPageSeller> {
     }
   }
 
-  // Generate permutations of buyer indices
-  List<List<int>> _getPermutations(List<int> nums) {
-    if (nums.length == 1) return [nums];
-
-    List<List<int>> allPermutations = [];
-    for (var i = 0; i < nums.length; i++) {
-      var remaining = List<int>.from(nums)..removeAt(i);
-      for (var perm in _getPermutations(remaining)) {
-        allPermutations.add([nums[i]] + perm);
-      }
-    }
-
-    return allPermutations;
-  }
-
-  // Calculate the total distance for a given route
-  double _calculateRouteDistance(List<LatLng> locations, List<int> route) {
-    double totalDistance = 0.0;
-
-    for (var i = 0; i < route.length; i++) {
-      LatLng start = locations[route[i]];
-      LatLng end = locations[route[(i + 1) % route.length]];
-      totalDistance += _calculateDistance(start, end);
-    }
-
-    return totalDistance;
-  }
-
   // Fetch buyer locations from Firebase
   void _fetchBuyerLocations() async {
     if (uid != null) {

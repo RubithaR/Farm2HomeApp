@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:veg/sellerpages/add_item_page.dart';
+import 'package:veg/sellerpages/history_seller/old_orders_seller.dart';
 import 'package:veg/sellerpages/map/seller_location.dart';
 import 'package:veg/sellerpages/view_order/view_orders_page.dart';
 import 'package:veg/sellerpages/bottom_nav_bar/bottom_nav_bar.dart';
@@ -61,8 +62,18 @@ class _HomePageSellerState extends State<HomePageSeller> {
           ? AppBar(
         title: const Text('Home'),
         backgroundColor: Colors.green,
+
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () {
+              // Add your navigation logic here
+            },
+          ),
+        ],
       )
           : null,
+
       bottomNavigationBar: MyBottomNavBar(
         onTabChange: _onTabChange,
       ),
@@ -137,6 +148,7 @@ class _HomePageSellerState extends State<HomePageSeller> {
                   });
                 },
               ),
+              const SizedBox(width: 15,),
               _buildButton(
                 imagePath: 'assets/images/buyer_homepage/vegetables.jpeg',
                 label: 'View Orders',
@@ -145,6 +157,37 @@ class _HomePageSellerState extends State<HomePageSeller> {
                   setState(() {
                     _selectedIndex = 3; // Switch to AddItemsPage
                   });
+                },
+              ),
+            ],
+          ),
+        ),
+
+        // Button Container
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildButton(
+                imagePath: 'assets/images/buyer_homepage/vegetables.jpeg',
+                label: 'Route',
+                onPressed: () {
+                  setState(() {
+                    _selectedIndex = 1; // Switch to AddItemsPage
+                  });
+                },
+              ),
+              const SizedBox(width: 15,),
+              _buildButton(
+                imagePath: 'assets/images/buyer_homepage/vegetables.jpeg',
+                label: 'History',
+                onPressed: () {
+                  // Pass the sellerId to ViewOrdersPage
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => OldOrdersSeller(sellerId: sellerId ?? '')
+                   ),
+                  ) ;
                 },
               ),
             ],

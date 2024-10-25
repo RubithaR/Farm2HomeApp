@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:veg/sellerpages/view_order/check_location_page.dart';
 
 class OldOrdersSeller extends StatefulWidget {
   final String sellerId; // Seller's UID
@@ -12,7 +11,7 @@ class OldOrdersSeller extends StatefulWidget {
 }
 
 class _OldOrdersSellerState extends State<OldOrdersSeller> {
-  final DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child("final_order");
+  final DatabaseReference historyRef = FirebaseDatabase.instance.ref().child("history_off_order");
   final DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users");
 
   @override
@@ -42,11 +41,11 @@ class _OldOrdersSellerState extends State<OldOrdersSeller> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Your Orders"),
+          title: const Text("History of Orders"),
           backgroundColor: Colors.green,
         ),
         body: StreamBuilder<DatabaseEvent>(
-          stream: ordersRef.onValue,
+          stream: historyRef.onValue,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -191,53 +190,6 @@ class _OldOrdersSellerState extends State<OldOrdersSeller> {
                                   ),
                                 ],
                               ),
-                            ),
-
-                            ElevatedButton(
-                              onPressed: () {
-                                // Retrieve the location from user details
-                                double? buyerLatitude = userDetails?['location']?['latitude'];
-                                double? buyerLongitude = userDetails?['location']?['longitude'];
-
-                                // Ensure the buyer has a location before navigating
-                                if (buyerLatitude != null && buyerLongitude != null) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => CheckLocationSeller(
-                                        latitude: buyerLatitude,
-                                        longitude: buyerLongitude,
-                                        buyerName: buyerName,
-                                      ),
-                                    ),
-                                  );
-                                } else {
-                                  // Show a message if the location is not available
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Location not available for this buyer.")),
-                                  );
-                                }
-                              },
-                              child: const Text("View on Map"),
-                            ),
-
-
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end, // Align the button to the right
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    // Navigate to the CheckoutOrder page with buyer's details
-
-                                  },
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                  child: const Text(
-                                    "Done",
-                                    style: TextStyle(fontSize: 20, color: Colors.white),
-                                  ),
-                                ),
-                              ],
                             ),
                           ],
                         ),

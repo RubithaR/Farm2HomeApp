@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:veg/sellerpages/view_order/check_location_page.dart';
+import 'package:quickalert/quickalert.dart';
 
 class ViewOrdersPage extends StatefulWidget {
   final String sellerId; // Seller's UID
@@ -12,22 +13,26 @@ class ViewOrdersPage extends StatefulWidget {
 }
 
 class _ViewOrdersPageState extends State<ViewOrdersPage> {
-  final DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child("final_order");
-  final DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users");
+  final DatabaseReference ordersRef =
+      FirebaseDatabase.instance.ref().child("final_order");
+  final DatabaseReference usersRef =
+      FirebaseDatabase.instance.ref().child("Users");
 
   @override
   void initState() {
     super.initState();
   }
 
-  Future<Map<String, Map<String, dynamic>>> fetchUserDetails(List<String> buyerIds) async {
+  Future<Map<String, Map<String, dynamic>>> fetchUserDetails(
+      List<String> buyerIds) async {
     Map<String, Map<String, dynamic>> usersDetails = {};
 
     for (String buyerId in buyerIds) {
       final userSnapshot = await usersRef.child(buyerId).once();
       if (userSnapshot.snapshot.value != null) {
         // Safely convert the data
-        usersDetails[buyerId] = Map<String, dynamic>.from(userSnapshot.snapshot.value as Map<Object?, Object?>);
+        usersDetails[buyerId] = Map<String, dynamic>.from(
+            userSnapshot.snapshot.value as Map<Object?, Object?>);
       }
     }
 
@@ -53,22 +58,24 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
             }
             if (snapshot.hasError) {
               return Center(
-                child: Text("Error: ${snapshot.error}", style: const TextStyle(color: Colors.red)),
+                child: Text("Error: ${snapshot.error}",
+                    style: const TextStyle(color: Colors.red)),
               );
             }
             if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
               return const Center(child: Text("No orders available."));
             }
-      
-            Map<dynamic, dynamic>? allOrders = snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
-      
+
+            Map<dynamic, dynamic>? allOrders =
+                snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
+
             // Map to group orders by buyer ID
             Map<String, List<Map<String, dynamic>>> groupedOrders = {};
-      
+
             if (allOrders == null || allOrders.isEmpty) {
               return const Center(child: Text("No orders found here."));
             }
-      
+
             // Group orders by buyer ID
             allOrders.forEach((buyerId, buyerOrders) {
               buyerOrders.forEach((sellerId, sellerOrders) {
@@ -81,9 +88,10 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                         'quantity': orderDetails['quantity'] ?? 0,
                         'total_price': orderDetails['total_price'] ?? 0,
                         'buyer_id': orderDetails['buyer_id'] ?? 'Unknown',
-                        'payment': orderDetails['payment'] ?? {}, // Safely include payment details
+                        'payment': orderDetails['payment'] ??
+                            {}, // Safely include payment details
                       };
-      
+
                       // Add the order to the appropriate buyer
                       if (!groupedOrders.containsKey(buyerId)) {
                         groupedOrders[buyerId] = [];
@@ -94,9 +102,10 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                 }
               });
             });
-      
+
             // Fetch user details for all buyers in a separate future
-            return FutureBuilder<Map<String, Map<String, dynamic>>>( // Future to fetch user details
+            return FutureBuilder<Map<String, Map<String, dynamic>>>(
+              // Future to fetch user details
               future: fetchUserDetails(groupedOrders.keys.toList()),
               builder: (context, userSnapshot) {
                 if (userSnapshot.connectionState == ConnectionState.waiting) {
@@ -104,42 +113,48 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                 }
                 if (userSnapshot.hasError) {
                   return Center(
-                    child: Text("Error fetching user details: ${userSnapshot.error}"),
+                    child: Text(
+                        "Error fetching user details: ${userSnapshot.error}"),
                   );
                 }
-      
+
                 // Create a list of widgets to display orders grouped by buyer
                 List<Widget> orderWidgets = groupedOrders.entries.map((entry) {
                   String buyerId = entry.key;
                   List<Map<String, dynamic>> orders = entry.value;
-      
+
                   // Calculate total price for this buyer
                   double buyerTotal = 0.0;
                   String paymentType = 'Unknown'; // Initialize paymentType
-      
+
                   for (var order in orders) {
                     buyerTotal += (order['total_price'] as num).toDouble();
                     // Extracting payment type from order details
                     if (order['payment'] != null) {
-                      var paymentDetails = order['payment'] as Map<dynamic, dynamic>;
+                      var paymentDetails =
+                          order['payment'] as Map<dynamic, dynamic>;
                       if (paymentDetails.isNotEmpty) {
-                        paymentType = paymentDetails.values.first['paymentType'] ?? 'Unknown'; // Get the paymentType if exists
+                        paymentType =
+                            paymentDetails.values.first['paymentType'] ??
+                                'Unknown'; // Get the paymentType if exists
                       }
                     }
                   }
-      
+
                   // Retrieve user details for this buyer
-                  Map<String, dynamic>? userDetails = userSnapshot.data![buyerId];
+                  Map<String, dynamic>? userDetails =
+                      userSnapshot.data![buyerId];
                   String buyerName = userDetails?['firstname'] ?? 'Unknown';
                   String buyerPhone = userDetails?['phone'] ?? 'Unknown';
                   String district = userDetails?['district'] ?? 'Unknown';
-      
+
                   return Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.green), // Green border
                     ),
-                    margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 8.0, horizontal: 16.0),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Padding(
@@ -147,25 +162,37 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("BuyerID: $buyerId", style: const TextStyle(fontWeight: FontWeight.bold)),
-                            Text("Name: $buyerName", style: const TextStyle(fontSize: 16)),
-                            Text("Phone: $buyerPhone", style: const TextStyle(fontSize: 16)),
-                            Text("District: $district", style: const TextStyle(fontSize: 16.0)),
+                            Text("BuyerID: $buyerId",
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
+                            Text("Name: $buyerName",
+                                style: const TextStyle(fontSize: 16)),
+                            Text("Phone: $buyerPhone",
+                                style: const TextStyle(fontSize: 16)),
+                            Text("District: $district",
+                                style: const TextStyle(fontSize: 16.0)),
                             const Divider(thickness: 1, color: Colors.green),
-      
-                            const SizedBox(height: 10), // Space between buyer details and orders
+
+                            const SizedBox(
+                                height:
+                                    10), // Space between buyer details and orders
                             ...orders.map((order) {
                               return ListTile(
                                 title: Text("${order['name_veg']}"),
-                                subtitle: Text("Quantity: ${order['quantity']}"),
-                                trailing: Text("Total: LKR ${order['total_price'].toStringAsFixed(2)}",
-                                  style: const TextStyle(fontWeight: FontWeight.bold),),
+                                subtitle:
+                                    Text("Quantity: ${order['quantity']}"),
+                                trailing: Text(
+                                  "Total: LKR ${order['total_price'].toStringAsFixed(2)}",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
                               );
                             }),
                             const Divider(thickness: 1, color: Colors.green),
-      
-                            const SizedBox(height: 10), // Space between orders and total
-      
+
+                            const SizedBox(
+                                height: 10), // Space between orders and total
+
                             Container(
                               padding: const EdgeInsets.all(8.0),
                               decoration: BoxDecoration(
@@ -179,28 +206,33 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                                   Text(
                                     "Total Price: LKR ${buyerTotal.toStringAsFixed(2)}",
                                     style: const TextStyle(
-                                        fontSize: 16.0, fontWeight: FontWeight.bold),
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 10.0),
-      
+
                                   // Display payment type below the total price
                                   Text(
                                     "Payment Type: $paymentType", // Use the local paymentType variable
                                     style: const TextStyle(
-                                        fontSize: 16.0, fontWeight: FontWeight.w500),
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.w500),
                                   ),
                                 ],
                               ),
                             ),
-      
+
                             ElevatedButton(
                               onPressed: () {
                                 // Retrieve the location from user details
-                                double? buyerLatitude = userDetails?['location']?['latitude'];
-                                double? buyerLongitude = userDetails?['location']?['longitude'];
-      
+                                double? buyerLatitude =
+                                    userDetails?['location']?['latitude'];
+                                double? buyerLongitude =
+                                    userDetails?['location']?['longitude'];
+
                                 // Ensure the buyer has a location before navigating
-                                if (buyerLatitude != null && buyerLongitude != null) {
+                                if (buyerLatitude != null &&
+                                    buyerLongitude != null) {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -214,28 +246,107 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                                 } else {
                                   // Show a message if the location is not available
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Location not available for this buyer.")),
+                                    const SnackBar(
+                                        content: Text(
+                                            "Location not available for this buyer.")),
                                   );
                                 }
                               },
                               child: const Text("View on Map"),
                             ),
-      
-      
+
                             const SizedBox(height: 10),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.end, // Align the button to the right
+                              mainAxisAlignment: MainAxisAlignment
+                                  .end, // Align the button to the right
                               children: [
                                 ElevatedButton(
                                   onPressed: () {
-                                    // Navigate to the CheckoutOrder page with buyer's details
+                                    QuickAlert.show(
+                                      context: context,
+                                      type: QuickAlertType.success,
+                                      text: "Delivery completed Successfully",
+                                      onConfirmBtnTap: () async {
+                                        try {
+                                          // Create a reference to the specific buyer's orders in 'final_order'
+                                          final DatabaseReference
+                                              finalOrderRef = FirebaseDatabase
+                                                  .instance
+                                                  .ref()
+                                                  .child('final_order')
+                                                  .child(buyerId)
+                                                  .child(widget.sellerId);
+
+                                          // Fetch the orders for this specific seller and buyer
+                                          final DataSnapshot orderSnapshot =
+                                              await finalOrderRef.get();
+
+                                          if (orderSnapshot.exists) {
+                                            Map<dynamic, dynamic> orders =
+                                                orderSnapshot.value
+                                                    as Map<dynamic, dynamic>;
+
+                                            // Create a reference to save the order in 'history_off_order'
+                                            final DatabaseReference historyRef =
+                                                FirebaseDatabase.instance
+                                                    .ref()
+                                                    .child('history_off_order')
+                                                    .child(buyerId)
+                                                    .child(widget.sellerId);
+
+                                            // Save the orders to 'history_off_order' before deleting from 'final_order'
+                                            for (String vegId in orders.keys) {
+                                              Map<dynamic, dynamic> vegOrders =
+                                                  orders[vegId];
+                                              for (String orderId
+                                                  in vegOrders.keys) {
+                                                await historyRef
+                                                    .child(vegId)
+                                                    .child(orderId)
+                                                    .set(vegOrders[orderId]);
+                                              }
+                                            }
+
+                                            // Now remove the orders from 'final_order'
+                                            await finalOrderRef.remove();
+
+                                            // Display success message and close the dialog
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                  content: Text(
+                                                      'Order moved to history successfully!')),
+                                            );
+                                            Navigator.of(context)
+                                                .pop(); // Close the dialog
+                                          } else {
+                                            // No orders found for this buyer
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                  content: Text(
+                                                      'No orders found to move.')),
+                                            );
+                                          }
+                                        } catch (error) {
+                                          // Handle any errors that occur during the process
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                                content: Text('Error: $error')),
+                                          );
+                                        }
+                                      },
+                                    );
                                   },
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green),
                                   child: const Text(
                                     "Done",
-                                    style: TextStyle(fontSize: 20, color: Colors.white),
+                                    style: TextStyle(
+                                        fontSize: 20, color: Colors.white),
                                   ),
-                                ),
+                                )
                               ],
                             ),
                           ],
@@ -244,11 +355,12 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                     ),
                   );
                 }).toList();
-      
+
                 if (orderWidgets.isEmpty) {
-                  return const Center(child: Text("No orders found for this seller."));
+                  return const Center(
+                      child: Text("No orders found for this seller."));
                 }
-      
+
                 return SingleChildScrollView(
                   child: Column(
                     children: orderWidgets,
@@ -262,3 +374,4 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
     );
   }
 }
+
