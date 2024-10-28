@@ -144,7 +144,7 @@ class MapPageSellerState extends State<MapPageSeller> {
     });
     _updateLocationInFirebase(newPosition);
   }
-
+  //Hi
   void _onMapTap(LatLng tappedPoint) {
     setState(() {
       _currentLocation = tappedPoint;
