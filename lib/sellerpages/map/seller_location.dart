@@ -132,6 +132,7 @@ class MapPageSellerState extends State<MapPageSeller> {
     _updateLocationInFirebase(newPosition); // Save the updated location in Firebase
   }
 
+
   void _onMapTap(LatLng tappedPoint) {
     setState(() {
       _currentLocation = tappedPoint; // Update to the new tapped location
@@ -374,8 +375,8 @@ class MapPageSellerState extends State<MapPageSeller> {
                 // Handle button press
                 // You can add any function call here to start route tracking, etc.
               },
-              child: const Icon(Icons.play_arrow),
               backgroundColor: Colors.green,
+              child: const Icon(Icons.play_arrow),
             ),
           ),
 

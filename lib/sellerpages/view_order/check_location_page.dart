@@ -6,8 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 class CheckLocationSeller extends StatefulWidget {
-  final double latitude; // Seller's latitude
-  final double longitude; // Seller's longitude
+  final double latitude; // buyer's latitude
+  final double longitude; // buyer's longitude
   final String buyerName;
 
   const CheckLocationSeller({super.key, required this.latitude, required this.longitude, required this.buyerName});
@@ -46,12 +46,13 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
     setState(() {}); // Call setState to rebuild the widget once the icon is loaded
   }
 
-  // Fetch the buyer's location from Firebase
+  // Fetch the seller's location from Firebase
   Future<void> _getUserLocationFromDatabase() async {
     uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(uid!);
       DatabaseEvent event = await userRef.once();
+
 
       if (event.snapshot.exists) {
         Map<dynamic, dynamic>? userData = event.snapshot.value as Map<dynamic, dynamic>?;
@@ -70,11 +71,13 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
         }
       } else {
         _getCurrentLocation(); // If no user data, get current location
+
       }
+
     }
   }
 
-  // Get the buyer's current location using Geolocator
+  // Get the seller's current location using Geolocator
   Future<void> _getCurrentLocation() async {
     try {
       Position position = await getCurrentLocation();
@@ -108,7 +111,7 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
     return await Geolocator.getCurrentPosition();
   }
 
-  // Update the buyer's location in Firebase
+  // Update the seller's location in Firebase
   Future<void> _updateLocationInFirebase(LatLng newLocation) async {
     if (uid != null) {
       DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(uid!);
@@ -131,15 +134,15 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
   Future<void> getPolylinePoints() async {
     PolylinePoints polylinePoints = PolylinePoints();
 
-    // Seller's location
+    // buyer's location
     LatLng sellerLocation = LatLng(widget.latitude, widget.longitude);
 
     // Fetch route between buyer and seller using PolylineRequest
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
       googleApiKey: "AIzaSyA9GskZpUFgljTermxTw-HVE3O6g_GtlIc", // Replace with your Google Maps API key
       request: PolylineRequest(
-        origin: PointLatLng(_currentLocation.latitude, _currentLocation.longitude), // Buyer's location
-        destination: PointLatLng(sellerLocation.latitude, sellerLocation.longitude), // Seller's location
+        origin: PointLatLng(_currentLocation.latitude, _currentLocation.longitude), // seller's location
+        destination: PointLatLng(sellerLocation.latitude, sellerLocation.longitude), // buyer's location
         mode: TravelMode.driving, // Specify travel mode
       ),
     );
@@ -179,52 +182,57 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
   // Display the map with the buyer's and seller's locations
   @override
   Widget build(BuildContext context) {
-    // Seller's location from navigation arguments
+    // buyer's location from navigation arguments
     LatLng sellerLocation = LatLng(widget.latitude, widget.longitude);
 
-    return Scaffold(
-      body: _locationFetched
-          ? GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: _currentLocation,
-          zoom: 14,
-        ),
-        markers: {
-          // Buyer's location marker
-          Marker(
-            markerId: const MarkerId('buyerLocation'),
-            position: _currentLocation,
-            draggable: true, // Allow dragging to update location
-            onDragEnd: (newPosition) {
-              _updateLocationInFirebase(newPosition); // Update the new location in Firebase
-            },
-            infoWindow: const InfoWindow(title: 'Your location'),
+    return GestureDetector(
+      child: Scaffold(
+        body: _locationFetched
+            ? GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: _currentLocation,
+            zoom: 14,
           ),
-          // Seller's location marker with custom image
-          Marker(
-            markerId: const MarkerId('sellerLocation'),
-            position: sellerLocation,
-            icon: buyerIcon ?? BitmapDescriptor.defaultMarker, // Use your custom image or a default if not loaded
-            infoWindow: InfoWindow(title: widget.buyerName),
-          ),
-        },
-        polylines: {
-          Polyline(
-            polylineId: const PolylineId('route'),
-            points: _routeCoordinates,
-            color: Colors.blue,
-            width: 5,
-          ),
-        },
-
-        onMapCreated: (GoogleMapController controller) {
-          mapController = controller;
-        },
-        onTap: (LatLng tappedLocation) {
-          _updateLocationInFirebase(tappedLocation); // Update location when map is tapped
-        },
-      )
-          : const Center(child: CircularProgressIndicator()), // Show a spinner while fetching location
+          markers: {
+            // seller's location marker
+            Marker(
+              markerId: const MarkerId('sellerLocation'),
+              position: _currentLocation,
+              draggable: true, // Allow dragging to update location
+              onDragEnd: (newPosition) {
+                _updateLocationInFirebase(newPosition); // Update the new location in Firebase
+              },
+              infoWindow: const InfoWindow(title: 'Your location'),
+            ),
+            // Seller's location marker with custom image
+            Marker(
+              markerId: const MarkerId('buyerLocation'),
+              position: sellerLocation,
+              icon: buyerIcon ?? BitmapDescriptor.defaultMarker, // Use your custom image or a default if not loaded
+              infoWindow: InfoWindow(title: widget.buyerName),
+            ),
+          },
+          polylines: {
+            Polyline(
+              polylineId: const PolylineId('route'),
+              points: _routeCoordinates,
+              color: Colors.blue,
+              width: 5,
+            ),
+          },
+      
+          onMapCreated: (GoogleMapController controller) {
+            mapController = controller;
+          },
+          onTap: (LatLng tappedLocation) {
+            setState(() {
+              _currentLocation = tappedLocation;
+            });
+            _updateLocationInFirebase(tappedLocation); // Update location when map is tapped
+          },
+        )
+            : const Center(child: CircularProgressIndicator()), // Show a spinner while fetching location
+      ),
     );
   }
 }

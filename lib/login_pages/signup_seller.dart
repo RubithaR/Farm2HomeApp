@@ -33,6 +33,9 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
   final TextEditingController _passwordcontroller = TextEditingController();
   final TextEditingController _phonecontroller = TextEditingController();
   Uint8List? _image;
+  bool isSecurePassword = true ;
+
+
   @override
   void dispose() {
     _firstnamecontroller.dispose();
@@ -281,17 +284,14 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
                           }
                           return null;
                         },
-                        obscureText: true,
+                        obscureText: isSecurePassword,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.lock_open),
                           labelText: 'Password',
                           labelStyle: const TextStyle(fontSize: 20),
                           hintText: 'Password',
                           border: const OutlineInputBorder(),
-                          suffixIcon: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.remove_red_eye_sharp),
-                          ),
+                          suffixIcon: togglePassword(),
                         ),
                       ),
                       const SizedBox(
@@ -353,6 +353,14 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
       ),
     );
   }
+  Widget togglePassword(){
+    return IconButton(onPressed: (){
+      setState(() {
+        isSecurePassword = !isSecurePassword;
+      });
 
+    }, icon: isSecurePassword ? Icon(Icons.visibility) : Icon(Icons.visibility_off),
+      color: Colors.black,);
+  }
 
 }
