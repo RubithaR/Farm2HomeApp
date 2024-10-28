@@ -3,10 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:geolocator/geolocator.dart'; // For location services
+import 'package:geolocator/geolocator.dart';
 import 'dart:math';
 import 'package:veg/shortest_path/dijkstra.dart';
-import 'package:veg/shortest_path/real_path.dart'; // Import Dijkstra implementation
+import 'package:veg/shortest_path/real_path.dart';
 
 class MapPageSeller extends StatefulWidget {
   const MapPageSeller({super.key});
@@ -35,7 +35,21 @@ class MapPageSellerState extends State<MapPageSeller> {
     _getUserLocationFromDatabase();
   }
 
-  // Fetch the seller's location from Firebase Realtime Database
+  Future<void> getPolylinePoints(LatLng current) async {
+    PolylinePoints polylinePoints = PolylinePoints();
+
+    LatLng sellerLocation = LatLng(current.latitude, current.longitude);
+
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      googleApiKey: "AIzaSyA9GskZpUFgljTermxTw-HVE3O6g_GtlIc",
+      request: PolylineRequest(
+        origin: PointLatLng(_currentLocation.latitude, _currentLocation.longitude),
+        destination: PointLatLng(sellerLocation.latitude, sellerLocation.longitude),
+        mode: TravelMode.driving,
+      ),
+    );
+  }
+
   Future<void> _getUserLocationFromDatabase() async {
     uid = FirebaseAuth.instance.currentUser?.uid;
     print("Current Seller ID: $uid");
@@ -53,7 +67,7 @@ class MapPageSellerState extends State<MapPageSeller> {
               userData['location']['longitude'] ?? 0.0,
             );
             _locationFetched = true;
-            _addCurrentLocationMarker(); // Add seller location marker
+            _addCurrentLocationMarker();
           });
           _fetchBuyerLocations();
         } else {
@@ -65,14 +79,13 @@ class MapPageSellerState extends State<MapPageSeller> {
     }
   }
 
-  // Fetch the current device location if no location is found in Firebase
   Future<void> _getCurrentLocation() async {
     try {
       Position position = await getCurrentLocation();
       setState(() {
         _currentLocation = LatLng(position.latitude, position.longitude);
         _locationFetched = true;
-        _addCurrentLocationMarker(); // Add seller location marker after fetching
+        _addCurrentLocationMarker();
       });
       _updateLocationInFirebase(_currentLocation);
     } catch (e) {
@@ -80,7 +93,6 @@ class MapPageSellerState extends State<MapPageSeller> {
     }
   }
 
-  // Get the current location using Geolocator
   Future<Position> getCurrentLocation() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
@@ -92,7 +104,6 @@ class MapPageSellerState extends State<MapPageSeller> {
     return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
   }
 
-  // Update the seller's location in Firebase Realtime Database
   Future<void> _updateLocationInFirebase(LatLng newLocation) async {
     if (uid != null) {
       DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(uid!);
@@ -102,24 +113,26 @@ class MapPageSellerState extends State<MapPageSeller> {
           'longitude': newLocation.longitude,
         }
       });
+
+      setState(() {
+        _currentLocation = newLocation;
+      });
+
+      _fetchBuyerLocations();
     }
   }
 
-  // Add a marker for the seller's current location
-  // Add a marker for the seller's current location
   void _addCurrentLocationMarker() {
     Marker sellerMarker = Marker(
       markerId: const MarkerId('currentLocation'),
       position: _currentLocation,
-      draggable: true, // Allow marker to be draggable
+      draggable: true,
       onDragEnd: (newPosition) {
-        // When the dragging ends, update the position
-        _onMarkerDragged(newPosition); // Call a separate method to handle updating location
+        _onMarkerDragged(newPosition);
       },
       infoWindow: const InfoWindow(title: 'Your location'),
     );
 
-    // Update the marker on the map
     setState(() {
       userMarkers[MarkerId('currentLocation')] = sellerMarker;
     });
@@ -127,32 +140,23 @@ class MapPageSellerState extends State<MapPageSeller> {
 
   void _onMarkerDragged(LatLng newPosition) {
     setState(() {
-      _currentLocation = newPosition; // Update the current location state
+      _currentLocation = newPosition;
     });
-    _updateLocationInFirebase(newPosition); // Save the updated location in Firebase
+    _updateLocationInFirebase(newPosition);
   }
 
   void _onMapTap(LatLng tappedPoint) {
     setState(() {
-      _currentLocation = tappedPoint; // Update to the new tapped location
+      _currentLocation = tappedPoint;
     });
-    _addCurrentLocationMarker(); // Add or update the marker at the tapped point
-    _updateLocationInFirebase(tappedPoint); // Save the new location to Firebase
+    _addCurrentLocationMarker();
+    _updateLocationInFirebase(tappedPoint);
   }
 
-
-
-
-
-
-
-
-  // Save the route for each buyer
   Future<void> _saveOrder(String buyerId, List<LatLng> routeCoordinates) async {
     if (uid != null) {
       DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child("paths").child(uid!).child(buyerId);
 
-      // Prepare route details (only the buyer's location and seller's ID)
       Map<String, dynamic> orderDetails = {
         'route': routeCoordinates.map((latLng) => {
           'latitude': latLng.latitude,
@@ -162,29 +166,19 @@ class MapPageSellerState extends State<MapPageSeller> {
         'timestamp': ServerValue.timestamp,
       };
 
-      // Save or overwrite the order for the buyer
       await ordersRef.set(orderDetails);
       print("Order saved for buyer: $buyerId");
     }
   }
 
-  // Find the shortest route to all buyers
-  // Add this function in your MapPageSellerState class
-  // Method to calculate the shortest path to all buyers
   void _findShortestRouteToAllBuyers() {
-    print("Finding the shortest path to all buyers...");
-
     if (uid != null && locationMap.isNotEmpty) {
-      // Add current location to the list
       List<LatLng> routePoints = [_currentLocation];
 
-      // Set of unvisited buyer locations
       Set<String> unvisitedBuyers = locationMap.keys.toSet();
-
       LatLng currentLocation = _currentLocation;
 
       while (unvisitedBuyers.isNotEmpty) {
-        // Find the nearest unvisited buyer
         String nearestBuyerId = unvisitedBuyers.first;
         double minDistance = _calculateDistance(currentLocation, locationMap[nearestBuyerId]!);
 
@@ -196,29 +190,17 @@ class MapPageSellerState extends State<MapPageSeller> {
           }
         }
 
-        // Move to the nearest buyer
         LatLng nearestBuyerLocation = locationMap[nearestBuyerId]!;
         routePoints.add(nearestBuyerLocation);
-
-        // Update current location to nearest buyer's location
         currentLocation = nearestBuyerLocation;
-
-        // Mark the nearest buyer as visited
         unvisitedBuyers.remove(nearestBuyerId);
-
-        // Save the order for the current buyer
         _saveOrder(nearestBuyerId, routePoints);
       }
 
-      // Draw the polyline for the shortest path
       _drawPolyline(routePoints);
-      print("Shortest path to all buyers calculated successfully.");
-    } else {
-      print("No buyers found or map not initialized.");
     }
   }
 
-  // Fetch buyer locations from Firebase
   void _fetchBuyerLocations() async {
     if (uid != null) {
       ordersRef = FirebaseDatabase.instance.ref().child("final_order");
@@ -228,8 +210,8 @@ class MapPageSellerState extends State<MapPageSeller> {
 
           if (ordersData != null) {
             setState(() {
-              userMarkers.clear(); // Clear old markers
-              _addCurrentLocationMarker(); // Re-add seller location marker
+              userMarkers.clear();
+              _addCurrentLocationMarker();
               _buyerLocations.clear();
             });
 
@@ -267,7 +249,6 @@ class MapPageSellerState extends State<MapPageSeller> {
     }
   }
 
-  // Fetch the buyer's location from Firebase
   Future<LatLng?> _getBuyerLocation(String buyerId) async {
     DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(buyerId);
     DatabaseEvent event = await usersRef.once();
@@ -288,49 +269,40 @@ class MapPageSellerState extends State<MapPageSeller> {
           markerId: markerId,
           position: buyerLocation,
           icon: markerIcon,
-          infoWindow: InfoWindow(title: "Buyer: ${userData['firstname']}"),
+          infoWindow: const InfoWindow(title: 'Buyer'),
         );
+
         setState(() {
           userMarkers[markerId] = marker;
         });
+
         return buyerLocation;
       }
     }
     return null;
   }
 
-  // Calculate the great circle distance between two LatLng points (Haversine formula)
   double _calculateDistance(LatLng start, LatLng end) {
-    const earthRadius = 6371000.0; // in meters
-    double lat1 = _degreesToRadians(start.latitude);
-    double lon1 = _degreesToRadians(start.longitude);
-    double lat2 = _degreesToRadians(end.latitude);
-    double lon2 = _degreesToRadians(end.longitude);
-    double dLat = lat2 - lat1;
-    double dLon = lon2 - lon1;
+    const earthRadius = 6371000.0;
+    double dLat = _degreesToRadians(end.latitude - start.latitude);
+    double dLon = _degreesToRadians(end.longitude - start.longitude);
 
     double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
-    double c = 2 *
-        atan2(sqrt(a), sqrt(1 - a));
-    return earthRadius * c;
+        cos(_degreesToRadians(start.latitude)) *
+            cos(_degreesToRadians(end.latitude)) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+    return earthRadius * 2 * atan2(sqrt(a), sqrt(1 - a));
   }
 
-  // Convert degrees to radians
-  double _degreesToRadians(double degrees) {
-    return degrees * pi / 180;
-  }
+  double _degreesToRadians(double degrees) => degrees * pi / 180;
 
-  // Draw polyline on the map based on route coordinates
-  void _drawPolyline(List<LatLng> routeCoordinates) async {
+  void _drawPolyline(List<LatLng> routeCoordinates) {
     setState(() {
       polylineCoordinates.clear();
       polylineCoordinates.addAll(routeCoordinates);
     });
   }
-
-  // Update marker position after dragging
-
 
   @override
   Widget build(BuildContext context) {
@@ -338,51 +310,27 @@ class MapPageSellerState extends State<MapPageSeller> {
       body: Stack(
         children: [
           _locationFetched
-            ? GoogleMap(
-          onMapCreated: (GoogleMapController controller) {
-            mapController = controller;
-          },
-          initialCameraPosition: CameraPosition(
-            target: _currentLocation,
-            zoom: 14.0,
-          ),
-          onTap: (LatLng tappedPoint) {
-            _onMapTap(tappedPoint); // Call the _onMapTap function when the map is tapped
-          },
-          markers: Set<Marker>.of(userMarkers.values),
-          polylines: {
-            Polyline(
-              polylineId: const PolylineId("route"),
-              points: polylineCoordinates,
-              color: Colors.red,
-              width: 4,
+              ? GoogleMap(
+            onTap: _onMapTap,
+            onMapCreated: (GoogleMapController controller) {
+              mapController = controller;
+            },
+            initialCameraPosition: CameraPosition(
+              target: _currentLocation,
+              zoom: 14.0,
             ),
-          },
-        )
-
-
-
-            : const Center(
-          child: CircularProgressIndicator(),
-        ),
-// The Start button on the left side
-          Positioned(
-            left: 16.0, // Adjust this value for precise positioning
-            bottom: 20.0, // Distance from the bottom of the screen
-            child: FloatingActionButton(
-              onPressed: () {
-                // Handle button press
-                // You can add any function call here to start route tracking, etc.
-              },
-              child: const Icon(Icons.play_arrow),
-              backgroundColor: Colors.green,
-            ),
-          ),
-
-
-
-
-       ],
+            markers: Set<Marker>.of(userMarkers.values),
+            polylines: {
+              Polyline(
+                polylineId: const PolylineId("route"),
+                points: polylineCoordinates,
+                color: Colors.red,
+                width: 4,
+              ),
+            },
+          )
+              : const Center(child: CircularProgressIndicator()),
+        ],
       ),
     );
   }
