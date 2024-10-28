@@ -74,6 +74,7 @@ class _CartPageState extends State<CartPage> {
                     child: const Text('Cancel'),
                   ),
                   ElevatedButton(
+
                     onPressed: () {
                       Navigator.push(
                         context,

@@ -18,6 +18,7 @@ class HomePageBuyer extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePageBuyer> {
+
   @override
   Widget build(BuildContext context) {
 

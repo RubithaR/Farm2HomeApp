@@ -19,6 +19,7 @@ class _LogInScreenState extends State<LogInScreen> {
   final _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool isSecurePassword = true ;
 
 
   Future<Position> getCurrentLocation(BuildContext context) async {
@@ -252,17 +253,14 @@ class _LogInScreenState extends State<LogInScreen> {
                           }
                           return null;
                         },
-                        obscureText: true,
+                        obscureText: isSecurePassword,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.lock_open),
                           labelText: 'Password',
                           labelStyle: const TextStyle(fontSize: 20),
                           hintText: 'Password',
                           border: const OutlineInputBorder(),
-                          suffixIcon: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.remove_red_eye_sharp),
-                          ),
+                          suffixIcon: togglePassword(),
                         ),
                       ),
                       const SizedBox(height: 10.0),
@@ -372,5 +370,14 @@ class _LogInScreenState extends State<LogInScreen> {
         ),
       ),
     );
+  }
+  Widget togglePassword(){
+    return IconButton(onPressed: (){
+      setState(() {
+        isSecurePassword = !isSecurePassword;
+      });
+
+    }, icon: isSecurePassword ? Icon(Icons.visibility) : Icon(Icons.visibility_off),
+      color: Colors.black,);
   }
 }
