@@ -76,12 +76,16 @@ class _CartPageState extends State<CartPage> {
                   ElevatedButton(
 
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const Aftercartconfirm(),
-                        ),
-                      );
+        // Pass the vegName from the first cart item as an example
+        if (value.userCart.isNotEmpty) {
+          String vegName = value.userCart.first.name;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>  Aftercartconfirm(vegName: vegName),
+            ),
+          );
+        }
                     },
                     child: const Text('Confirm'),
                   ),

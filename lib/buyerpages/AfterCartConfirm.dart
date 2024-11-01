@@ -7,8 +7,8 @@ import 'order/order_details.dart';
 
 
 class Aftercartconfirm extends StatefulWidget {
-  //final String vegName;
-  const Aftercartconfirm({super.key});
+  final String vegName;
+  const Aftercartconfirm({super.key , required this.vegName});
 
   @override
   State<Aftercartconfirm> createState() => _AftercartconfirmState();
@@ -48,7 +48,7 @@ class _AftercartconfirmState extends State<Aftercartconfirm> {
           'Place your orders',
           style: TextStyle(fontSize: 20.0, color: Colors.white),
         ),
-        actions: [
+       /* actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart),
             onPressed: () {
@@ -58,7 +58,7 @@ class _AftercartconfirmState extends State<Aftercartconfirm> {
               );
             },
           ),
-        ],
+        ],*/
       ),
       body: Column(
         children: [
@@ -94,7 +94,9 @@ class _AftercartconfirmState extends State<Aftercartconfirm> {
                       Map<dynamic, dynamic> vegetableDetails =
                       sellersData[sellerId]['vegetable_details'];
                       vegetableDetails.forEach((vegId, vegInfo) {
-                        if (vegInfo['name_veg'] == 'carrot') {
+
+
+                        if ((vegInfo['name_veg'] as String).toLowerCase() == widget.vegName.toLowerCase()) {
                           vegetableWidgets.add(
                             Card(
                               margin: const EdgeInsets.symmetric(vertical: 8.0),

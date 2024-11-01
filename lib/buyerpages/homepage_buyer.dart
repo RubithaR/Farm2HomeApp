@@ -2,9 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/buyerpages/Cart/addcart_additem.dart';
-import 'package:veg/buyerpages/Cart/bottom_nav_bar.dart';
-import 'package:veg/buyerpages/order/home_order.dart';
-//import 'package:veg/buyerpages/Cart/model_cart.dart';
+import 'package:veg/buyerpages/payment/ViewPaymentsPage.dart';
 import 'package:veg/googlemapscreens/current_location_screen.dart';
 import 'package:veg/buyerpages/order/view_veg_seller.dart';
 import '../buyerpages/Widgets/appbarwidget.dart';
@@ -146,7 +144,7 @@ class _HomePageState extends State<HomePageBuyer> {
                           children: [
                             Image(
                               image: AssetImage(
-                                  'assets/images/buyer_homepage/vegetables.jpeg'),
+                                  'assets/images/buyer_homepage/location.jpg'),
                               height: 140,
                               width: 125,
                             ),
@@ -255,7 +253,7 @@ class _HomePageState extends State<HomePageBuyer> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const MapPage(),
+                              builder: (context) => const ViewPaymentsPage(),
                             ),
                           );
                         },
@@ -280,7 +278,7 @@ class _HomePageState extends State<HomePageBuyer> {
                               width: 125,
                             ),
                             Text(
-                              'My Location',
+                              'Your orders',
                               style:
                               TextStyle(fontSize: 20, color: Colors.green),
                             ),

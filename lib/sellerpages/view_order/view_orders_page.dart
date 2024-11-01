@@ -293,18 +293,42 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                                                     .child('history_off_order')
                                                     .child(buyerId)
                                                     .child(widget.sellerId);
+                                            // Create a reference to save the order in 'history_off_order'
+                                            final DatabaseReference historyAlgoRef =
+                                            FirebaseDatabase.instance
+                                                .ref()
+                                                .child('history_for_algo');
+                                            // Fetch buyer details for district information
+                                            final DatabaseReference buyerRef = FirebaseDatabase.instance
+                                                .ref()
+                                                .child('Users')
+                                                .child(buyerId);
+                                            final DataSnapshot buyerSnapshot = await buyerRef.get();
+                                            final String buyerDistrict = buyerSnapshot.child('district').value as String;
 
-                                            // Save the orders to 'history_off_order' before deleting from 'final_order'
+
+                                            // Save orders to 'history_off_order' and aggregate data for 'history_for_algo'
                                             for (String vegId in orders.keys) {
-                                              Map<dynamic, dynamic> vegOrders =
-                                                  orders[vegId];
-                                              for (String orderId
-                                                  in vegOrders.keys) {
-                                                await historyRef
-                                                    .child(vegId)
-                                                    .child(orderId)
-                                                    .set(vegOrders[orderId]);
+                                              Map<dynamic, dynamic> vegOrders = orders[vegId];
+                                              int totalQuantity = 0;
+
+                                              for (String orderId in vegOrders.keys) {
+                                                // Save individual orders to history
+                                                await historyRef.child(vegId).child(orderId).set(vegOrders[orderId]);
+
+                                                // Aggregate quantity for each vegetable
+                                                int quantity = vegOrders[orderId]['quantity'] as int;
+                                                totalQuantity += quantity;
                                               }
+
+                                              // Save aggregated data by vegetable ID, name, and district in 'history_for_algo'
+                                              String vegetableName = vegOrders.values.first['name_veg'] as String;
+                                              await historyAlgoRef
+                                                  .child(vegetableName)
+                                                  .child(buyerDistrict)
+                                                  .set({
+                                                'total_quantity': ServerValue.increment(totalQuantity),
+                                              });
                                             }
 
                                             // Now remove the orders from 'final_order'

@@ -45,7 +45,9 @@ class _SampleState extends State<Sample> {
           'Place your orders',
           style: TextStyle(fontSize: 20.0, color: Colors.white),
         ),
-        actions: [
+
+
+        /*actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart),
             onPressed: () {
@@ -55,7 +57,8 @@ class _SampleState extends State<Sample> {
               );
             },
           ),
-        ],
+        ],*/
+
       ),
       body: Column(
         children: [

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:veg/buyerpages/payment/check_location.dart';
 
-class ViewPaymentsPage extends StatefulWidget {
-  const ViewPaymentsPage({super.key});
+class OldOrdersBuyer extends StatefulWidget {
+  const OldOrdersBuyer({super.key});
 
   @override
-  State<ViewPaymentsPage> createState() => _ViewPaymentsPageState();
+  State<OldOrdersBuyer> createState() => _OldOrdersBuyerState();
 }
 
-class _ViewPaymentsPageState extends State<ViewPaymentsPage> {
+class _OldOrdersBuyerState extends State<OldOrdersBuyer> {
   User? currentFirebaseUser;
   final DatabaseReference orderRef = FirebaseDatabase.instance.ref().child("history_off_order");
   final DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users");
