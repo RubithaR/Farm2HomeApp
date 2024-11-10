@@ -102,13 +102,22 @@ class _SampleState extends State<Sample> {
                               side: const BorderSide(color: Colors.green),
                             ),
                             child: ListTile(
-                              title: Text(
-                                vegInfo['name_veg'] ?? 'Unnamed Vegetable',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    vegInfo['name_veg'] ?? 'Unnamed Vegetable',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    "Price  : ${vegInfo['price'].toStringAsFixed(2) ?? 'N/A'} Rs",
+                                  ),
+                                  Text(
+                                    "Quantity: ${vegInfo['quantity'].toStringAsFixed(2) ?? 'N/A'} kg ",
+                                  ),
+                                ],
                               ),
-                              subtitle: Text(
-                                "Price: LKR ${vegInfo['price'] ?? 'N/A'}, Quantity: ${vegInfo['quantity'] ?? 'N/A'}",
-                              ),
+                              // add button code
                               trailing: ElevatedButton(
                                 onPressed: () => _showQuantityDialog(
                                     vegInfo, sellerId, vegId, ordersRef),
@@ -202,8 +211,10 @@ class _SampleState extends State<Sample> {
   void _showQuantityDialog(Map<dynamic, dynamic> vegInfo, String sellerId,
       String vegId, DatabaseReference ordersRef) {
     final TextEditingController quantityController = TextEditingController();
+// Get available quantity from seller's data
+    double availableQuantity = double.tryParse(vegInfo['quantity'].toString()) ?? 0;
+  //  int nameofvegetable = (vegInfo['name_veg'];
 
-    int availableQuantity = int.tryParse(vegInfo['quantity'].toString()) ?? 0; // Get available quantity from seller's data
 
     showDialog(
       context: context,
@@ -218,7 +229,7 @@ class _SampleState extends State<Sample> {
           actions: [
             TextButton(
               onPressed: () {
-                int quantity = int.tryParse(quantityController.text) ?? 0;
+                double quantity = double.tryParse(quantityController.text) ?? 0;
 
                 if (quantity > 0 && quantity <= availableQuantity) {
                   double price = double.tryParse(vegInfo['price'].toString()) ?? 0;
@@ -236,6 +247,7 @@ class _SampleState extends State<Sample> {
                     "total_price": totalPrice,
                     "buyer_id": currentFirebaseUser!.uid,
                   });
+
 
                   // Optionally, show a confirmation message
                   ScaffoldMessenger.of(context).showSnackBar(

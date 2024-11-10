@@ -40,6 +40,23 @@ class _VegetableOneState extends State<VegetableOne> {
   void saveVegetableInfo() {
     if (_formKey.currentState!.validate()) {
       if (currentFirebaseUser != null) {
+        // Try parsing price and quantity as doubles safely
+        final priceText = _priceController.text.trim();
+        final quantityText = _quantityController.text.trim();
+
+        double? price = double.tryParse(priceText);
+        double? quantity = double.tryParse(quantityText);
+
+        if (price == null || quantity == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please enter valid numbers for price and quantity')),
+          );
+          return;
+        }
+        // Round price and quantity to 2 decimal places
+        price = double.parse(price.toStringAsFixed(2));
+        quantity = double.parse(quantity.toStringAsFixed(2));
+
         // Reference to seller's node in Realtime Database
         DatabaseReference sellersRef = FirebaseDatabase.instance
             .ref()
@@ -51,10 +68,10 @@ class _VegetableOneState extends State<VegetableOne> {
         String key = sellersRef.push().key!;
 
         // Create a map to hold the vegetable data
-        Map<String, String> sellerDataMap = {
-          "price": _priceController.text.trim(),
-          "quantity": _quantityController.text.trim(),
+        Map<String, dynamic> sellerDataMap = {
           "name_veg": _nameVegController.text.trim(),
+          "price": price,
+          "quantity": quantity,
         };
 
         // Save data to Firebase

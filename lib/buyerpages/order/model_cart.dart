@@ -1,7 +1,7 @@
 class CartItem {
   final String vegetableId;
   final String vegetableName;
-  final int quantity;
+  final double quantity;
   final double totalPrice;
 
   CartItem({
@@ -15,10 +15,12 @@ class CartItem {
     return CartItem(
       vegetableId: map['vegetableId'] ?? '',
       vegetableName: map['name_veg'] ?? '',
-      quantity: map['quantity'] ?? 0,
+      quantity: (map['quantity'] is int)
+          ? (map['quantity'] as int).toDouble() // Convert int to double
+          : (map['quantity'] as double? ?? 0.0), // Use double if available, default to 0.0
       totalPrice: (map['total_price'] is int)
-          ? (map['total_price'] as int).toDouble() // Cast int to double
-          : (map['total_price'] ?? 0.0), // Ensure it's a double
+          ? (map['total_price'] as int).toDouble() // Convert int to double
+          : (map['total_price'] as double? ?? 0.0), // Use double if available, default to 0.0
     );
   }
 

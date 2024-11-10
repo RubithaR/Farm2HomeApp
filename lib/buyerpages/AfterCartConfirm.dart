@@ -8,6 +8,7 @@ import 'order/order_details.dart';
 
 class Aftercartconfirm extends StatefulWidget {
   final String vegName;
+
   const Aftercartconfirm({super.key , required this.vegName});
 
   @override
@@ -21,7 +22,7 @@ class _AftercartconfirmState extends State<Aftercartconfirm> {
   void initState() {
     super.initState();
     currentFirebaseUser = FirebaseAuth.instance.currentUser;
-    print("Current User: $currentFirebaseUser");
+   // print("Current User: $currentFirebaseUser");
   }
 
   @override
@@ -105,16 +106,22 @@ class _AftercartconfirmState extends State<Aftercartconfirm> {
                                 side: const BorderSide(color: Colors.green),
                               ),
                               child: ListTile(
-                                title: Text(
-                                  vegInfo['name_veg'] ?? 'Unnamed Vegetable',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
+                                title: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      vegInfo['name_veg'] ?? 'Unnamed Vegetable',
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      "Price  : ${vegInfo['price'].toStringAsFixed(2) ?? 'N/A'} Rs",
+                                    ),
+                                    Text(
+                                      "Quantity: ${vegInfo['quantity'].toStringAsFixed(2) ?? 'N/A'} kg",
+                                    ),
+                                  ],
                                 ),
-                                subtitle: Text(
-                                  "Price: LKR ${vegInfo['price'] ??
-                                      'N/A'}, Quantity: ${vegInfo['quantity'] ??
-                                      'N/A'}",
-                                ),
+                                // a
                                 trailing: ElevatedButton(
                                   onPressed: () =>
                                       _showQuantityDialog(
@@ -216,7 +223,7 @@ class _AftercartconfirmState extends State<Aftercartconfirm> {
       String vegId, DatabaseReference ordersRef) {
     final TextEditingController quantityController = TextEditingController();
 
-    int availableQuantity = int.tryParse(vegInfo['quantity'].toString()) ?? 0; // Get available quantity from seller's data
+    double availableQuantity = double.tryParse(vegInfo['quantity'].toString()) ?? 0; // Get available quantity from seller's data
 
     showDialog(
       context: context,
@@ -231,7 +238,7 @@ class _AftercartconfirmState extends State<Aftercartconfirm> {
           actions: [
             TextButton(
               onPressed: () {
-                int quantity = int.tryParse(quantityController.text) ?? 0;
+                double quantity = double.tryParse(quantityController.text) ?? 0;
 
                 if (quantity > 0 && quantity <= availableQuantity) {
                   double price = double.tryParse(vegInfo['price'].toString()) ?? 0;

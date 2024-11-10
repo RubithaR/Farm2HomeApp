@@ -6,8 +6,11 @@ import 'ViewPaymentsPage.dart'; // Import the ViewPaymentsPage
 class PaymentPage extends StatefulWidget {
   final String sellerId;
   final double totalAmount;
+  final List<Map<String, dynamic>> vegetableDetails; // List of vegetable details
 
-  const PaymentPage({required this.sellerId, required this.totalAmount, super.key});
+
+  const PaymentPage({required this.sellerId, required this.totalAmount,required this.vegetableDetails, super.key});
+
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -21,6 +24,54 @@ class _PaymentPageState extends State<PaymentPage> {
   final TextEditingController cardNumberController = TextEditingController();
   final TextEditingController cardHolderNameController = TextEditingController();
   final TextEditingController secretCodeController = TextEditingController();
+
+  Future<void> reduceVegetableQuantity() async {
+    DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child("sellers");
+
+    for (var veg in widget.vegetableDetails) {
+      // order vegid and quantity
+      String vegId = veg['vegId'];
+      double orderedQuantity = veg['quantity']is int
+          ? (veg['quantity'] as int).toDouble()
+          : (veg['quantity'] as double);
+
+     // print("Vegetable ID: $vegId");
+    //  print("Ordered Quantity: $orderedQuantity");
+
+      // Get the current quantity in the database
+      DataSnapshot snapshot = await ordersRef
+          .child(widget.sellerId)
+          .child("vegetable_details")
+          .child(vegId)
+          .get();
+
+      if (snapshot.exists) {
+        // Access the current quantity and parse it as an integer if needed
+        Map<dynamic, dynamic> vegetableData = snapshot.value as Map<dynamic, dynamic>;
+        double currentQuantity = vegetableData['quantity'] is int
+            ? (vegetableData['quantity'] as int).toDouble()
+            : (vegetableData['quantity'] as double);
+
+
+
+      //  print("Current Quantity in Firebase: $currentQuantity");
+
+        // Calculate the new quantity after reduction
+        if (currentQuantity >= orderedQuantity) {
+          double newQuantity = currentQuantity - orderedQuantity;
+
+          // Update the quantity in Firebase
+          await ordersRef
+              .child(widget.sellerId)
+              .child("vegetable_details")
+              .child(vegId)
+              .update({'quantity': newQuantity});
+
+       //   print("Updated Quantity: $newQuantity");
+        }
+      }
+    }
+  }
 
 
   void _submitPayment() async {
@@ -45,6 +96,8 @@ class _PaymentPageState extends State<PaymentPage> {
           ? cardHolderNameController.text
           : null,
     );
+    await reduceVegetableQuantity();
+
   }
 
   Future<void> _savePaymentDetails({
@@ -87,7 +140,7 @@ class _PaymentPageState extends State<PaymentPage> {
               .child("payment")
               .push()
               .set({
-            'totalAmount': widget.totalAmount,
+            'totalAmount': double.parse(widget.totalAmount.toStringAsFixed(2)),
             'paymentType': paymentType,
             'cardType': cardType,
             'cardHolderName': cardHolderName,

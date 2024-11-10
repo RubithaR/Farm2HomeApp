@@ -13,10 +13,8 @@ class ViewOrdersPage extends StatefulWidget {
 }
 
 class _ViewOrdersPageState extends State<ViewOrdersPage> {
-  final DatabaseReference ordersRef =
-      FirebaseDatabase.instance.ref().child("final_order");
-  final DatabaseReference usersRef =
-      FirebaseDatabase.instance.ref().child("Users");
+  final DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child("final_order");
+  final DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users");
 
   @override
   void initState() {
@@ -180,7 +178,7 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                               return ListTile(
                                 title: Text("${order['name_veg']}"),
                                 subtitle:
-                                    Text("Quantity: ${order['quantity']}"),
+                                    Text("Quantity: ${order['quantity'].toStringAsFixed(2)}"),
                                 trailing: Text(
                                   "Total: LKR ${order['total_price'].toStringAsFixed(2)}",
                                   style: const TextStyle(
@@ -269,40 +267,33 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                                       onConfirmBtnTap: () async {
                                         try {
                                           // Create a reference to the specific buyer's orders in 'final_order'
-                                          final DatabaseReference
-                                              finalOrderRef = FirebaseDatabase
-                                                  .instance
-                                                  .ref()
+                                          final DatabaseReference finalOrderRef = FirebaseDatabase.instance.ref()
                                                   .child('final_order')
                                                   .child(buyerId)
                                                   .child(widget.sellerId);
 
                                           // Fetch the orders for this specific seller and buyer
-                                          final DataSnapshot orderSnapshot =
-                                              await finalOrderRef.get();
+                                          final DataSnapshot orderSnapshot = await finalOrderRef.get();
 
                                           if (orderSnapshot.exists) {
                                             Map<dynamic, dynamic> orders =
-                                                orderSnapshot.value
-                                                    as Map<dynamic, dynamic>;
+                                                orderSnapshot.value as Map<dynamic, dynamic>;
 
                                             // Create a reference to save the order in 'history_off_order'
-                                            final DatabaseReference historyRef =
-                                                FirebaseDatabase.instance
-                                                    .ref()
+                                            final DatabaseReference historyRef = FirebaseDatabase.instance.ref()
                                                     .child('history_off_order')
                                                     .child(buyerId)
                                                     .child(widget.sellerId);
+
                                             // Create a reference to save the order in 'history_off_order'
-                                            final DatabaseReference historyAlgoRef =
-                                            FirebaseDatabase.instance
-                                                .ref()
+                                            final DatabaseReference historyAlgoRef = FirebaseDatabase.instance.ref()
                                                 .child('history_for_algo');
+
                                             // Fetch buyer details for district information
-                                            final DatabaseReference buyerRef = FirebaseDatabase.instance
-                                                .ref()
+                                            final DatabaseReference buyerRef = FirebaseDatabase.instance.ref()
                                                 .child('Users')
                                                 .child(buyerId);
+
                                             final DataSnapshot buyerSnapshot = await buyerRef.get();
                                             final String buyerDistrict = buyerSnapshot.child('district').value as String;
 
@@ -310,14 +301,14 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                                             // Save orders to 'history_off_order' and aggregate data for 'history_for_algo'
                                             for (String vegId in orders.keys) {
                                               Map<dynamic, dynamic> vegOrders = orders[vegId];
-                                              int totalQuantity = 0;
+                                              double totalQuantity = 0.0;
 
                                               for (String orderId in vegOrders.keys) {
                                                 // Save individual orders to history
                                                 await historyRef.child(vegId).child(orderId).set(vegOrders[orderId]);
 
-                                                // Aggregate quantity for each vegetable
-                                                int quantity = vegOrders[orderId]['quantity'] as int;
+                                                // Aggregate quantity for each vegetable, casting to double to avoid type issues
+                                                double quantity = (vegOrders[orderId]['quantity'] as num).toDouble();
                                                 totalQuantity += quantity;
                                               }
 

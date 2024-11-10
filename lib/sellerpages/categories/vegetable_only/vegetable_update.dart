@@ -5,16 +5,16 @@ import 'package:flutter/material.dart';
 class VegetableUpdate extends StatefulWidget {
   final String itemId;
   final String name;
-  final String price;
-  final String quantity;
+  final double price; // Changed to int
+  final double quantity; // Changed to int
 
   const VegetableUpdate({
-    Key? key,
+    super.key,
     required this.itemId,
     required this.name,
     required this.price,
     required this.quantity,
-  }) : super(key: key);
+  });
 
   @override
   _VegetableUpdateState createState() => _VegetableUpdateState();
@@ -32,8 +32,8 @@ class _VegetableUpdateState extends State<VegetableUpdate> {
     super.initState();
     // Set initial values for the text fields
     _nameController.text = widget.name;
-    _priceController.text = widget.price;
-    _quantityController.text = widget.quantity;
+    _priceController.text = widget.price.toString();
+    _quantityController.text = widget.quantity.toString();
   }
 
   @override
@@ -54,10 +54,13 @@ class _VegetableUpdateState extends State<VegetableUpdate> {
           .child("vegetable_details")
           .child(widget.itemId);
 
+      double price = double.tryParse(_priceController.text) ?? 0;
+      double quantity = double.tryParse(_quantityController.text) ?? 0;
+
       sellersRef.update({
         "name_veg": _nameController.text,
-        "price": _priceController.text,
-        "quantity": _quantityController.text,
+        "price": price,
+        "quantity": quantity,
       }).then((_) {
         Navigator.pop(context); // Go back to the previous page
       }).catchError((error) {
@@ -73,7 +76,7 @@ class _VegetableUpdateState extends State<VegetableUpdate> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
-        automaticallyImplyLeading: false, // Add this line to remove the back arrow
+        automaticallyImplyLeading: false,
         title: const Text(
           'Update Vegetable',
           style: TextStyle(fontSize: 20.0, color: Colors.white),
@@ -86,7 +89,6 @@ class _VegetableUpdateState extends State<VegetableUpdate> {
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
               child: Column(
                 children: [
-                  // Form widget with form fields
                   Form(
                     key: _formKey,
                     child: Padding(
@@ -103,7 +105,7 @@ class _VegetableUpdateState extends State<VegetableUpdate> {
                           _buildTextField(
                             controller: _priceController,
                             label: 'Price for 1kg',
-                            hintText: 'Enter the price in LkR',
+                            hintText: 'Enter the price in LKR',
                             keyboardType: TextInputType.number,
                           ),
                           const SizedBox(height: 20.0),
@@ -192,6 +194,9 @@ class _VegetableUpdateState extends State<VegetableUpdate> {
         validator: (value) {
           if (value == null || value.isEmpty) {
             return "Please enter $label";
+          }
+          if (keyboardType == TextInputType.number && double.tryParse(value) == null) {
+            return "Please enter a valid number for $label";
           }
           return null;
         },

@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/sellerpages/categories/vegetable_only/vegetable_adding.dart';
 import 'package:veg/sellerpages/categories/vegetable_only/vegetable_update.dart';
-import 'package:veg/sellerpages/homepage_seller.dart'; // Assume this navigates to vegetable details
 
 class AddItemsPage extends StatefulWidget {
   const AddItemsPage({super.key});
@@ -22,7 +21,7 @@ class _AddItemsPageState extends State<AddItemsPage> {
     super.initState();
     // Retrieve the current logged-in Firebase user
     currentFirebaseUser = FirebaseAuth.instance.currentUser;
-    print("Current User: $currentFirebaseUser");
+  //  print("Current User: $currentFirebaseUser");
   }
 
   @override
@@ -56,7 +55,6 @@ class _AddItemsPageState extends State<AddItemsPage> {
             'Add Items',
             style: TextStyle(fontSize: 20.0, color: Colors.black),
           ),
-
         ),
         body: Column(
           children: [
@@ -117,6 +115,10 @@ class _AddItemsPageState extends State<AddItemsPage> {
                     Animation<double> animation, int index) {
                   if (snapshot.exists) {
                     Map item = snapshot.value as Map;
+                    // Change price and quantity to double
+                    double price = (item['price'] as num).toDouble();
+                    double quantity = (item['quantity'] as num).toDouble();
+
                     return Container(
                       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                       width: double.infinity,
@@ -133,39 +135,35 @@ class _AddItemsPageState extends State<AddItemsPage> {
                           ),
                         ],
                       ),
-
                       child: Padding(
                         padding: const EdgeInsets.all(10),
-
                         child: ListTile(
                           title: Text(
                             item['name_veg'].toString(),
                             style: const TextStyle(
-                              fontWeight: FontWeight.bold, // Bold text for vegetable name
-                              fontSize: 18, // Increase font size for vegetable name
-                            ),),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
                           subtitle: RichText(
                             text: TextSpan(
                               children: [
                                 const TextSpan(
-                                  text: "Price per kg: ",
-                                  style: TextStyle(color: Colors.black), // Normal text
+                                  text: "Price per kg : ",
+                                  style: TextStyle(color: Colors.black),
                                 ),
                                 TextSpan(
-                                  text: "${item['price']} Rs", // Bold price amount with Rs
+                                  text: "${price.toStringAsFixed(2)} Rs",
                                   style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                                 ),
-
-
                                 const TextSpan(
-                                  text: ", Available Quantity: ", // Normal quantity
-                                  style:  TextStyle(color: Colors.black),
+                                  text: ", Quantity : ",
+                                  style: TextStyle(color: Colors.black),
                                 ),
                                 TextSpan(
-                                  text: "${item['quantity']} kg", // Bold price amount with Rs
+                                  text: "${quantity.toStringAsFixed(2)} kg",
                                   style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                                 ),
-
                               ],
                             ),
                           ),
@@ -182,8 +180,8 @@ class _AddItemsPageState extends State<AddItemsPage> {
                                       builder: (context) => VegetableUpdate(
                                         itemId: snapshot.key!,
                                         name: item['name_veg'],
-                                        price: item['price'],
-                                        quantity: item['quantity'],
+                                        price: price,
+                                        quantity: quantity,
                                       ),
                                     ),
                                   );
@@ -215,32 +213,30 @@ class _AddItemsPageState extends State<AddItemsPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                              borderRadius: BorderRadius.circular(50),
-                            ),
-                            child: TextButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                    const VegetableOne(),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(
-                                Icons.add,
-                                color: Colors.white,
-                              ),
-                              label: const Text(
-                                'Add ',
-                                style:
-                                TextStyle(fontSize: 20, color: Colors.white),
-                              ),
-                            ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    child: TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const VegetableOne(),
                           ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        'Add ',
+                        style: TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

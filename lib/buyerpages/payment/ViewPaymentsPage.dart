@@ -155,8 +155,8 @@ class _ViewPaymentsPageState extends State<ViewPaymentsPage> {
                             // Create a CartItem that includes the payment type
                             CartItem cartItem = CartItem.fromMap({
                               'name_veg': orderDetails['name_veg'],
-                              'quantity': orderDetails['quantity'],
-                              'total_price': orderDetails['total_price'],
+                              'quantity': (orderDetails['quantity'] as num).toDouble(),
+                              'total_price': (orderDetails['total_price'] as num).toDouble(),
                             });
 
                             totalSellerPrice += cartItem.totalPrice;
@@ -179,11 +179,11 @@ class _ViewPaymentsPageState extends State<ViewPaymentsPage> {
                                                 color: Colors.black),
                                           ),
                                           Text(
-                                            "Quantity: ${cartItem.quantity} kg",
+                                            "Quantity: ${cartItem.quantity.toStringAsFixed(2)} kg",
                                             style: const TextStyle(fontSize: 14.0),
                                           ),
                                           Text(
-                                            "Total Price: LKR ${cartItem.totalPrice}",
+                                            "Total Price: LKR ${cartItem.totalPrice.toStringAsFixed(2)}",
                                             style: const TextStyle(fontSize: 14.0),
                                           ),
                                         ],
@@ -212,7 +212,7 @@ class _ViewPaymentsPageState extends State<ViewPaymentsPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Total Price: LKR $totalSellerPrice",
+                              "Total Price: LKR ${totalSellerPrice.toStringAsFixed(2)}",
                               style: const TextStyle(
                                   fontSize: 16.0, fontWeight: FontWeight.bold),
                             ),
@@ -275,7 +275,7 @@ class _ViewPaymentsPageState extends State<ViewPaymentsPage> {
 // Your CartItem class
 class CartItem {
   final String vegetableName;
-  final int quantity;
+  final double quantity;
   final double totalPrice;
 
   CartItem({
@@ -287,7 +287,7 @@ class CartItem {
   factory CartItem.fromMap(Map<String, dynamic> map) {
     return CartItem(
       vegetableName: map['name_veg'] as String,
-      quantity: map['quantity'] as int,
+      quantity: map['quantity'] as double,
       totalPrice: (map['total_price'] as num).toDouble(),
     );
   }

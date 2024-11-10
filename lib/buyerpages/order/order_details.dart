@@ -73,9 +73,9 @@ class _CartState extends State<Cart> {
 
           ordersData = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
           List<Widget> orderWidgets = [];
-
+          
           ordersData.forEach((sellerId, vegetableData) {
-            double totalSellerPrice = 0;
+            double totalSellerPrice = 0.0;
 
             // Fetch seller details from "Users" node only if not already fetched
             fetchSellerDetails(sellerId);
@@ -132,8 +132,7 @@ class _CartState extends State<Cart> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: vegOrders.entries.map((orderEntry) {
-                            var orderDetails =
-                            orderEntry.value as Map<dynamic, dynamic>;
+                            var orderDetails = orderEntry.value as Map<dynamic, dynamic>;
                             CartItem cartItem = CartItem.fromMap({
                               'name_veg': orderDetails['name_veg'],
                               'quantity': orderDetails['quantity'],
@@ -159,11 +158,11 @@ class _CartState extends State<Cart> {
                                                 color: Colors.black),
                                           ),
                                           Text(
-                                            "Quantity: ${cartItem.quantity} kg",
+                                            "Quantity: ${cartItem.quantity.toStringAsFixed(2)} kg",
                                             style: const TextStyle(fontSize: 14.0),
                                           ),
                                           Text(
-                                            "Total Price: LKR ${cartItem.totalPrice}",
+                                            "Total Price: LKR ${cartItem.totalPrice.toStringAsFixed(2)}",
                                             style: const TextStyle(fontSize: 14.0),
                                           ),
                                         ],
@@ -193,7 +192,11 @@ class _CartState extends State<Cart> {
                         );
                       }).toList(),
 
-                      const SizedBox(height: 10.0), // Add space before total price
+                      const Column(
+                        children: [
+                          SizedBox(height: 10.0), // Add space before total price
+                        ],
+                      ),
 
                       // Total price and Pay button in the same box
                       Container(
@@ -207,7 +210,7 @@ class _CartState extends State<Cart> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Total Price : LKR $totalSellerPrice",
+                              "Total Price : LKR ${totalSellerPrice.toStringAsFixed(2)}",
                               style: const TextStyle(
                                   fontSize: 16.0, fontWeight: FontWeight.bold),
                             ),
@@ -215,18 +218,36 @@ class _CartState extends State<Cart> {
                               alignment: Alignment.centerRight,
                               child: ElevatedButton(
                                 onPressed: () async {
-                                 await Navigator.push(
+
+                                  // Prepare vegetableDetails for PaymentPage
+                                  List<Map<String, dynamic>> vegetableDetails = [];
+
+                                  vegetableData.forEach((vegId, vegOrders) {
+                                    vegOrders.entries.forEach((orderEntry) {
+                                      var orderDetails = orderEntry.value as Map<dynamic, dynamic>;
+                                      vegetableDetails.add({
+                                        'vegId': vegId,
+                                        'name_veg': orderDetails['name_veg'],
+                                        'quantity': orderDetails['quantity'],
+                                      });
+
+
+                                    });
+                                  });
+                                  await Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => PaymentPage(
                                         sellerId: sellerId,
                                         totalAmount: totalSellerPrice,
+                                        vegetableDetails: vegetableDetails,
                                       ),
                                     ),
                                   );
-                                 setState(() {
 
-                                 });
+                                  setState(() {
+                                    // Update state after navigation, if needed
+                                  });
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,
@@ -243,6 +264,8 @@ class _CartState extends State<Cart> {
               ),
             );
           });
+
+
 
           return ListView(
             padding: const EdgeInsets.all(16.0),
