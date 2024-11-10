@@ -35,6 +35,49 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
   Uint8List? _image;
   bool isSecurePassword = true ;
 
+  // District list for dropdown
+  final List<String> districts = [
+    "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo", "Galle",
+    "Gampaha", "Hambantota", "Jaffna", "Kalutara", "Kandy", "Kegalle",
+    "Kilinochchi", "Kurunegala", "Mannar", "Matale", "Matara", "Monaragala",
+    "Mullaitivu", "Nuwara Eliya", "Polonnaruwa", "Puttalam", "Ratnapura",
+    "Trincomalee", "Vavuniya"
+  ]..sort();
+
+  final Map<String, List<String>> placesMap = {
+    "Ampara": ["Akkaraipattu", "Ampara Town", "Kalmunai", "Pothuvil", "Samanthurai"],
+    "Anuradhapura": ["Anuradhapura Town", "Habarana", "Mihintale", "Rathkinda", "Tissawewa"],
+    "Badulla": ["Badulla Town", "Buddhagama", "Ella", "Haputale", "Passara"],
+    "Batticaloa": ["Batticaloa Town", "Eravur", "Kaluwanchikudy", "Kattankudy", "Valaichenai"],
+    "Colombo": ["Bambalapitiya", "Dehiwala", "GalleFace", "Kollupitiya", "Mount Lavinia", "Pettah", "Wellawatte"],
+    "Galle": ["Ambalangoda", "Gintota", "Hikkaduwa", "Koggala", "Unawatuna"],
+    "Gampaha": ["Gampaha Town", "Ja-Ela", "Kelaniya", "Negombo", "Veyangoda"],
+    "Hambantota": ["Ambalantota", "Hambantota Town", "Katuwana", "Ranna", "Tangalle"],
+    "Jaffna": ["Chavakachcheri", "Jaffna Town", "Nallur", "Point Pedro", "Vannarpannai"],
+    "Kalutara": ["Aluthgama", "Beruwala", "Bentota", "Kalutara Town", "Moragalla"],
+    "Kandy": ["Gatambe", "Hanthana", "Katugastota", "Peradeniya", "Pilimathalawa"],
+    "Kegalle": ["Aranayaka", "Kegalle Town", "Mawanella", "Rambukkana", "Warakapola"],
+    "Kilinochchi": ["Elephant Pass", "Kilinochchi Town", "Mulliyawalai", "Palai", "Pooneryn"],
+    "Kurunegala": ["Dambulla", "Kurunegala Town", "Maho", "Melsiripura", "Puttalam"],
+    "Mannar": ["Adam's Bridge", "Mannar Town", "Nanattan", "Pesalai", "Thalaimannar"],
+    "Matale": ["Dambulla", "Kandegama", "Matale Town", "Naula", "Rattota"],
+    "Matara": ["Kamburugamuwa", "Matara Town", "Mirissa", "Tangalle", "Weligama"],
+    "Monaragala": ["Balangoda", "Buttala", "Kataragama", "Monaragala Town", "Thanamalwila"],
+    "Mullaitivu": ["Alampil", "Mullaitivu Town", "Mullaitivu District", "Oddusuddan", "Puthukkudiyiruppu"],
+    "Nuwara Eliya": ["Ambewela", "Gregory Lake", "Hakgala", "Nanu Oya", "Nuwara Eliya Town"],
+    "Polonnaruwa": ["Dimbulagala", "Girithale", "Habarana", "Medirigiriya", "Polonnaruwa Town"],
+    "Puttalam": ["Anamaduwa", "Chilaw", "Mannar", "Nattandiya", "Puttalam Town"],
+    "Ratnapura": ["Balangoda", "Egodauyana", "Pelmadulla", "Ratnapura Town", "Rathnapura District"],
+    "Trincomalee": ["Kinniya", "Nilaveli", "Trincomalee Town", "Uppuveli", "Verugal"],
+    "Vavuniya": ["Andankulam", "Mannar", "Puthukudiyiruppu", "Thandikulam", "Vavuniya Town"]
+  };
+  List<String> placeList = [];
+  String? _selectedPlace;
+
+
+
+  String? _selectedDistrict;
+
 
   @override
   void dispose() {
@@ -54,43 +97,30 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
 
       if (!context.mounted) return;
       Navigator.pop(context);
+
+      // Save user data to Firebase Realtime Database
       DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(userFirebase!.uid);
       Map userDataMap = {
-        "firstname" : _firstnamecontroller.text.trim(),
-        "district" : _districtcontroller.text.trim(),
-        "email" : _emailcontroller.text.trim(),
-        "password" : _passwordcontroller.text.trim(),
-        "phone" : _phonecontroller.text.trim(),
-        "role" : "Seller",
-
+        "firstname": _firstnamecontroller.text.trim(),
+        "district": _selectedDistrict ?? "",  // Save the selected district here
+        "place": _selectedPlace ?? "",  // Save the selected place here
+        "email": _emailcontroller.text.trim(),
+        "password": _passwordcontroller.text.trim(),
+        "phone": _phonecontroller.text.trim(),
+        "role": "Seller",
       };
       usersRef.set(userDataMap);
 
-      // print('Hi');
-      // if (userFirebase != null) {
-      //   String uid = userFirebase.uid;
-      //   String imageUrl = _image != null ? await uploadImageToStorage('profileImage/$uid', _image!) : '';
-      //
-      //   await saveData(
-      //     firstName: _firstnamecontroller.text.trim(),
-      //     secondName: _secondnamecontroller.text.trim(),
-      //     imageUrl: imageUrl,
-      //     uid: uid,
-      //   );
-      //
-      //   if (!mounted) return;
-      //
-      //   // Navigate to login screen after successful registration
-      //   Navigator.pop(context); // Remove current screen from stack
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const LogInScreen()));
-      // }
+      // After saving data, navigate to login screen
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LogInScreen()));
+
     } catch (error) {
       // Handle registration error
       print('Registration error: $error');
-      // Example: Display error message to user
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registration failed. Please try again later.')));
     }
   }
+
 
   Future<String> uploadImageToStorage(String childName, Uint8List file) async {
     Reference ref = FirebaseStorage.instance.ref().child(childName);
@@ -204,24 +234,67 @@ class _SignUpScreenState extends State<SignUpScreenSeller> {
                       const SizedBox(
                         height: 20.0,
                       ),
-                      TextFormField(
-                        validator: (secondName) {
-                          if (secondName!.isEmpty) {
-                            return "Please Enter district";
-                          }
-                          return null;
-                        },
-                        controller: _districtcontroller,
+                      DropdownButtonFormField<String>(
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.location_city),
                           labelText: 'District',
                           labelStyle: TextStyle(fontSize: 20),
-                          hintText: 'district',
                           border: OutlineInputBorder(),
                         ),
-                        keyboardType: TextInputType.text,
-                        autocorrect: true,
+                        value: _selectedDistrict,
+                        items: districts.map((String district) {
+                          return DropdownMenuItem<String>(
+                            value: district,
+                            child: Text(district),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedDistrict = newValue;
+                            placeList = placesMap[_selectedDistrict] ?? [];  // Update placeList based on selected district
+                            _selectedPlace = null;  // Reset selected place
+                          });
+                        },
+                        validator: (value) => value == null ? 'Please select a district' : null,
+                        isExpanded: true,
+                        // To show scrollable list if there are more than 5 items
+                        menuMaxHeight: 250,
                       ),
+
+                      const SizedBox(
+                        height: 20.0,
+                      ),
+
+                      DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.location_pin),
+                          labelText: 'Place',
+                          labelStyle: TextStyle(fontSize: 20),
+                          border: OutlineInputBorder(),
+                        ),
+                        value: _selectedPlace,
+                        items: placeList.isNotEmpty
+                            ? List.generate(
+                          placeList.length > 5 ? 5 : placeList.length, (index) {
+                          return DropdownMenuItem<String>(
+                            value: placeList[index],
+                            child: Text(placeList[index]),
+                          );
+                        },
+                        )
+                            : [],
+                        onChanged: (String? newPlace) {
+                          setState(() {
+                            _selectedPlace = newPlace;
+                          });
+                        },
+                        validator: (value) => value == null ? 'Please select a place' : null,
+                        isExpanded: true,
+                        // To show scrollable list if there are more than 5 items
+                        menuMaxHeight: 300,  // Adjust this value as necessary
+                      ),
+
+
                       const SizedBox(
                         height: 20.0,
                       ),

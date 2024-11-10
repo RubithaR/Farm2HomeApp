@@ -65,7 +65,7 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
             }
 
             Map<dynamic, dynamic>? allOrders =
-                snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
+            snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
 
             // Map to group orders by buyer ID
             Map<String, List<Map<String, dynamic>>> groupedOrders = {};
@@ -130,7 +130,7 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                     // Extracting payment type from order details
                     if (order['payment'] != null) {
                       var paymentDetails =
-                          order['payment'] as Map<dynamic, dynamic>;
+                      order['payment'] as Map<dynamic, dynamic>;
                       if (paymentDetails.isNotEmpty) {
                         paymentType =
                             paymentDetails.values.first['paymentType'] ??
@@ -141,7 +141,7 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
 
                   // Retrieve user details for this buyer
                   Map<String, dynamic>? userDetails =
-                      userSnapshot.data![buyerId];
+                  userSnapshot.data![buyerId];
                   String buyerName = userDetails?['firstname'] ?? 'Unknown';
                   String buyerPhone = userDetails?['phone'] ?? 'Unknown';
                   String district = userDetails?['district'] ?? 'Unknown';
@@ -173,12 +173,12 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
 
                             const SizedBox(
                                 height:
-                                    10), // Space between buyer details and orders
+                                10), // Space between buyer details and orders
                             ...orders.map((order) {
                               return ListTile(
                                 title: Text("${order['name_veg']}"),
                                 subtitle:
-                                    Text("Quantity: ${order['quantity'].toStringAsFixed(2)}"),
+                                Text("Quantity: ${order['quantity'].toStringAsFixed(2)}"),
                                 trailing: Text(
                                   "Total: LKR ${order['total_price'].toStringAsFixed(2)}",
                                   style: const TextStyle(
@@ -224,9 +224,9 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                               onPressed: () {
                                 // Retrieve the location from user details
                                 double? buyerLatitude =
-                                    userDetails?['location']?['latitude'];
+                                userDetails?['location']?['latitude'];
                                 double? buyerLongitude =
-                                    userDetails?['location']?['longitude'];
+                                userDetails?['location']?['longitude'];
 
                                 // Ensure the buyer has a location before navigating
                                 if (buyerLatitude != null &&
@@ -268,22 +268,22 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
                                         try {
                                           // Create a reference to the specific buyer's orders in 'final_order'
                                           final DatabaseReference finalOrderRef = FirebaseDatabase.instance.ref()
-                                                  .child('final_order')
-                                                  .child(buyerId)
-                                                  .child(widget.sellerId);
+                                              .child('final_order')
+                                              .child(buyerId)
+                                              .child(widget.sellerId);
 
                                           // Fetch the orders for this specific seller and buyer
                                           final DataSnapshot orderSnapshot = await finalOrderRef.get();
 
                                           if (orderSnapshot.exists) {
                                             Map<dynamic, dynamic> orders =
-                                                orderSnapshot.value as Map<dynamic, dynamic>;
+                                            orderSnapshot.value as Map<dynamic, dynamic>;
 
                                             // Create a reference to save the order in 'history_off_order'
                                             final DatabaseReference historyRef = FirebaseDatabase.instance.ref()
-                                                    .child('history_off_order')
-                                                    .child(buyerId)
-                                                    .child(widget.sellerId);
+                                                .child('history_off_order')
+                                                .child(buyerId)
+                                                .child(widget.sellerId);
 
                                             // Create a reference to save the order in 'history_off_order'
                                             final DatabaseReference historyAlgoRef = FirebaseDatabase.instance.ref()
@@ -389,4 +389,3 @@ class _ViewOrdersPageState extends State<ViewOrdersPage> {
     );
   }
 }
-

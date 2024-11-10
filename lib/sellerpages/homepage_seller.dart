@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:veg/sellerpages/add_item_page.dart';
 import 'package:veg/sellerpages/history_seller/old_orders_seller.dart';
 import 'package:veg/sellerpages/map/seller_location.dart';
+import 'package:veg/sellerpages/startjourney/startjourney.dart';
 import 'package:veg/sellerpages/view_order/view_orders_page.dart';
 import 'package:veg/sellerpages/bottom_nav_bar/bottom_nav_bar.dart';
 
@@ -189,6 +190,60 @@ class _HomePageSellerState extends State<HomePageSeller> {
                    ),
                   ) ;
                 },
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 350, // Double width
+                height: 130, // Same height
+                decoration: BoxDecoration(
+                  color: Colors.greenAccent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.8),
+                      spreadRadius: 2,
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => StartJourney()),
+                    );
+                  },
+                  style: ButtonStyle(
+                    overlayColor: MaterialStateProperty.resolveWith(
+                            (states) => Colors.white.withOpacity(0.2)),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: const BorderSide(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.map, color: Colors.white, size: 40),
+                      SizedBox(height: 8),
+                      Text(
+                        "Start Journey",
+                        style: TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

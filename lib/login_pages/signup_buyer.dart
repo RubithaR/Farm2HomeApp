@@ -33,6 +33,47 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
   Uint8List? _image;
   bool isSecurePassword = true ;
 
+  final List<String> districts = [
+    "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo", "Galle",
+    "Gampaha", "Hambantota", "Jaffna", "Kalutara", "Kandy", "Kegalle",
+    "Kilinochchi", "Kurunegala", "Mannar", "Matale", "Matara", "Monaragala",
+    "Mullaitivu", "Nuwara Eliya", "Polonnaruwa", "Puttalam", "Ratnapura",
+    "Trincomalee", "Vavuniya"
+  ]..sort();
+
+  final Map<String, List<String>> placesMap = {
+    "Ampara": ["Akkaraipattu", "Ampara Town", "Kalmunai", "Pothuvil", "Samanthurai"],
+    "Anuradhapura": ["Anuradhapura Town", "Habarana", "Mihintale", "Rathkinda", "Tissawewa"],
+    "Badulla": ["Badulla Town", "Buddhagama", "Ella", "Haputale", "Passara"],
+    "Batticaloa": ["Batticaloa Town", "Eravur", "Kaluwanchikudy", "Kattankudy", "Valaichenai"],
+    "Colombo": ["Bambalapitiya", "Dehiwala", "GalleFace", "Kollupitiya", "Mount Lavinia", "Pettah", "Wellawatte"],
+    "Galle": ["Ambalangoda", "Gintota", "Hikkaduwa", "Koggala", "Unawatuna"],
+    "Gampaha": ["Gampaha Town", "Ja-Ela", "Kelaniya", "Negombo", "Veyangoda"],
+    "Hambantota": ["Ambalantota", "Hambantota Town", "Katuwana", "Ranna", "Tangalle"],
+    "Jaffna": ["Chavakachcheri", "Jaffna Town", "Nallur", "Point Pedro", "Vannarpannai"],
+    "Kalutara": ["Aluthgama", "Beruwala", "Bentota", "Kalutara Town", "Moragalla"],
+    "Kandy": ["Gatambe", "Hanthana", "Katugastota", "Peradeniya", "Pilimathalawa"],
+    "Kegalle": ["Aranayaka", "Kegalle Town", "Mawanella", "Rambukkana", "Warakapola"],
+    "Kilinochchi": ["Elephant Pass", "Kilinochchi Town", "Mulliyawalai", "Palai", "Pooneryn"],
+    "Kurunegala": ["Dambulla", "Kurunegala Town", "Maho", "Melsiripura", "Puttalam"],
+    "Mannar": ["Adam's Bridge", "Mannar Town", "Nanattan", "Pesalai", "Thalaimannar"],
+    "Matale": ["Dambulla", "Kandegama", "Matale Town", "Naula", "Rattota"],
+    "Matara": ["Kamburugamuwa", "Matara Town", "Mirissa", "Tangalle", "Weligama"],
+    "Monaragala": ["Balangoda", "Buttala", "Kataragama", "Monaragala Town", "Thanamalwila"],
+    "Mullaitivu": ["Alampil", "Mullaitivu Town", "Mullaitivu District", "Oddusuddan", "Puthukkudiyiruppu"],
+    "Nuwara Eliya": ["Ambewela", "Gregory Lake", "Hakgala", "Nanu Oya", "Nuwara Eliya Town"],
+    "Polonnaruwa": ["Dimbulagala", "Girithale", "Habarana", "Medirigiriya", "Polonnaruwa Town"],
+    "Puttalam": ["Anamaduwa", "Chilaw", "Mannar", "Nattandiya", "Puttalam Town"],
+    "Ratnapura": ["Balangoda", "Egodauyana", "Pelmadulla", "Ratnapura Town", "Rathnapura District"],
+    "Trincomalee": ["Kinniya", "Nilaveli", "Trincomalee Town", "Uppuveli", "Verugal"],
+    "Vavuniya": ["Andankulam", "Mannar", "Puthukudiyiruppu", "Thandikulam", "Vavuniya Town"]
+  };
+  List<String> placeList = [];
+  String? _selectedPlace;
+
+
+
+  String? _selectedDistrict;
 
   @override
   void dispose() {
@@ -56,7 +97,8 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
       DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("Users").child(userFirebase!.uid);
       Map userDataMap = {
         "firstname" : _firstnamecontroller.text.trim(),
-        "district" : _districtcontroller.text.trim(),
+        "district": _selectedDistrict ?? "",  // Save the selected district here
+        "place": _selectedPlace ?? "",
         "email" : _emailcontroller.text.trim(),
         "password" : _passwordcontroller.text.trim(),
         "phone" : _phonecontroller.text.trim(),
@@ -176,23 +218,64 @@ class _SignUpScreenState extends State<SignUpScreenBuyer> {
                           autocorrect: true,
                         ),
                         const SizedBox(height: 20.0),
-                        TextFormField(
-                          validator: (secondName) {
-                            if (secondName!.isEmpty) {
-                              return "Please Enter the District";
-                            }
-                            return null;
-                          },
-                          controller: _districtcontroller,
+                        DropdownButtonFormField<String>(
                           decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.people_alt_outlined),
+                            prefixIcon: Icon(Icons.location_city),
                             labelText: 'District',
                             labelStyle: TextStyle(fontSize: 20),
-                            hintText: 'District',
                             border: OutlineInputBorder(),
                           ),
-                          keyboardType: TextInputType.text,
-                          autocorrect: true,
+                          value: _selectedDistrict,
+                          items: districts.map((String district) {
+                            return DropdownMenuItem<String>(
+                              value: district,
+                              child: Text(district),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              _selectedDistrict = newValue;
+                              placeList = placesMap[_selectedDistrict] ?? [];  // Update placeList based on selected district
+                              _selectedPlace = null;  // Reset selected place
+                            });
+                          },
+                          validator: (value) => value == null ? 'Please select a district' : null,
+                          isExpanded: true,
+                          // To show scrollable list if there are more than 5 items
+                          menuMaxHeight: 250,
+                        ),
+
+                        const SizedBox(
+                          height: 20.0,
+                        ),
+
+                        DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
+                            prefixIcon: Icon(Icons.location_pin),
+                            labelText: 'Place',
+                            labelStyle: TextStyle(fontSize: 20),
+                            border: OutlineInputBorder(),
+                          ),
+                          value: _selectedPlace,
+                          items: placeList.isNotEmpty
+                              ? List.generate(
+                            placeList.length > 5 ? 5 : placeList.length, (index) {
+                            return DropdownMenuItem<String>(
+                              value: placeList[index],
+                              child: Text(placeList[index]),
+                            );
+                          },
+                          )
+                              : [],
+                          onChanged: (String? newPlace) {
+                            setState(() {
+                              _selectedPlace = newPlace;
+                            });
+                          },
+                          validator: (value) => value == null ? 'Please select a place' : null,
+                          isExpanded: true,
+                          // To show scrollable list if there are more than 5 items
+                          menuMaxHeight: 300,  // Adjust this value as necessary
                         ),
                         const SizedBox(height: 20.0),
                         TextFormField(
