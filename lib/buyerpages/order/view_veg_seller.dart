@@ -13,6 +13,7 @@ class Sample extends StatefulWidget {
 
 class _SampleState extends State<Sample> {
   User? currentFirebaseUser;
+  Map<String, double> remainingQuantities = {}; // Track remaining quantities locally
 
   @override
   void initState() {
@@ -45,20 +46,6 @@ class _SampleState extends State<Sample> {
           'Place your orders',
           style: TextStyle(fontSize: 20.0, color: Colors.white),
         ),
-
-
-        /*actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ViewPaymentsPage()),
-              );
-            },
-          ),
-        ],*/
-
       ),
       body: Column(
         children: [
@@ -94,6 +81,10 @@ class _SampleState extends State<Sample> {
                       Map<dynamic, dynamic> vegetableDetails =
                       sellersData[sellerId]['vegetable_details'];
                       vegetableDetails.forEach((vegId, vegInfo) {
+                        // Initialize local remaining quantity if it hasn't been set yet
+                        double initialQuantity = double.tryParse(vegInfo['quantity'].toString()) ?? 0;
+                        remainingQuantities["$sellerId-$vegId"] ??= initialQuantity;
+
                         vegetableWidgets.add(
                           Card(
                             margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -113,11 +104,10 @@ class _SampleState extends State<Sample> {
                                     "Price  : ${vegInfo['price'].toStringAsFixed(2) ?? 'N/A'} Rs",
                                   ),
                                   Text(
-                                    "Quantity: ${vegInfo['quantity'].toStringAsFixed(2) ?? 'N/A'} kg ",
+                                    "Quantity: ${remainingQuantities["$sellerId-$vegId"]!.toStringAsFixed(2)} kg ",
                                   ),
                                 ],
                               ),
-                              // add button code
                               trailing: ElevatedButton(
                                 onPressed: () => _showQuantityDialog(
                                     vegInfo, sellerId, vegId, ordersRef),
@@ -180,12 +170,12 @@ class _SampleState extends State<Sample> {
                     child: SizedBox(
                       height: 43.0,
                       child: ElevatedButton(
-                        onPressed: (){
+                        onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const Cart()),
                           );
-                        }, // Implement save logic here
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                         ),
@@ -211,10 +201,7 @@ class _SampleState extends State<Sample> {
   void _showQuantityDialog(Map<dynamic, dynamic> vegInfo, String sellerId,
       String vegId, DatabaseReference ordersRef) {
     final TextEditingController quantityController = TextEditingController();
-// Get available quantity from seller's data
-    double availableQuantity = double.tryParse(vegInfo['quantity'].toString()) ?? 0;
-  //  int nameofvegetable = (vegInfo['name_veg'];
-
+    double availableQuantity = remainingQuantities["$sellerId-$vegId"] ?? 0;
 
     showDialog(
       context: context,
@@ -234,6 +221,9 @@ class _SampleState extends State<Sample> {
                 if (quantity > 0 && quantity <= availableQuantity) {
                   double price = double.tryParse(vegInfo['price'].toString()) ?? 0;
                   double totalPrice = price * quantity;
+                  setState(() {
+                    remainingQuantities["$sellerId-$vegId"] = availableQuantity - quantity;
+                  });
 
                   // Add to cart in Firebase
                   ordersRef
@@ -248,19 +238,15 @@ class _SampleState extends State<Sample> {
                     "buyer_id": currentFirebaseUser!.uid,
                   });
 
-
-                  // Optionally, show a confirmation message
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Added to cart!')),
                   );
                   Navigator.pop(context);
                 } else if (quantity > availableQuantity) {
-                  // Show an error message if quantity exceeds available stock
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Cannot add more than available quantity ($availableQuantity)')),
                   );
                 } else {
-                  // Show an error for invalid quantity
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Please enter a valid quantity.')),
                   );
@@ -279,5 +265,4 @@ class _SampleState extends State<Sample> {
       },
     );
   }
-
 }
