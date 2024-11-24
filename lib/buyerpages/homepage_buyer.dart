@@ -1,10 +1,15 @@
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:veg/buyerpages/Cart/addcart_additem.dart';
+import 'package:veg/buyerpages/history_buyer/old_orders_buyer.dart';
 import 'package:veg/buyerpages/payment/ViewPaymentsPage.dart';
 import 'package:veg/googlemapscreens/current_location_screen.dart';
 import 'package:veg/buyerpages/order/view_veg_seller.dart';
+import 'package:veg/login_pages/login.dart';
+import 'package:veg/sellerpages/editprofilepage.dart';
 import '../buyerpages/Widgets/appbarwidget.dart';
 import '../buyerpages/Widgets/categorieswidget.dart';
 
@@ -17,15 +22,143 @@ class HomePageBuyer extends StatefulWidget {
 
 class _HomePageState extends State<HomePageBuyer> {
 
+  String? sellerId;
+  String? firstName;
+  int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSellerDetails(); // Fetch seller details on init
+  }
+
+  Future<void> _fetchSellerDetails() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    sellerId = user?.uid; // Set sellerId from the current user's UID
+
+    if (sellerId != null) {
+      // Reference to the seller's data in the database
+      DatabaseReference sellerRef = FirebaseDatabase.instance.ref('Users/$sellerId');
+
+      // Get seller data
+      DatabaseEvent event = await sellerRef.once();
+      if (event.snapshot.exists) {
+        final data = event.snapshot.value as Map<dynamic, dynamic>;
+        setState(() {
+          firstName = data['firstname']; // Assuming you're saving the first name under this key
+        });
+      }
+    } else {
+      print('No user is logged in');
+    }
+  }
+
+
+  void _onTabChange(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
   @override
   Widget build(BuildContext context) {
-
-
     return Scaffold(
       body: ListView(
         children: [
           //Custom App Bar Widget
-          const AppBarWidget(),
+      Padding(padding: const EdgeInsets.symmetric(
+        vertical: 15,
+        horizontal: 15,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          InkWell(
+            onTap: () {
+              // The PopupMenuButton will handle the menu display.
+            },
+            child: Container(padding: const EdgeInsets.all(8),
+              decoration:  BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 2,
+                    blurRadius: 10,
+                    offset: const Offset(0,3),
+                  )
+                ],
+              ),
+              child: PopupMenuButton<String>(
+                onSelected: (value) {
+                  // Handle menu item selection.
+                  if (value == 'Edit Profile') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Editprofilepage(sellerId: sellerId ?? ''),
+                      ),
+                    );
+                  } else if (value == 'History') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OldOrdersBuyer(), // Your History screen
+                      ),
+                    );
+                  } else if (value == 'Logout') {
+                    // Handle logout logic.
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LogInScreen(), // Your Login screen
+                      ),
+                    );
+                  }
+                },
+                itemBuilder: (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    value: 'Edit Profile',
+                    child: Text('Edit Profile'),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'History',
+                    child: Text('History'),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'Logout',
+                    child: Text('Logout'),
+                  ),
+
+                ],
+                child: const Icon(CupertinoIcons.bars),
+              ),
+            ),
+          ),
+
+
+          InkWell(
+            onTap: (){} ,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration:  BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 2,
+                    blurRadius: 10,
+                    offset: const Offset(0,3),
+                  )
+                ],
+              ),
+              child: const Icon(Icons.notifications),
+            ),
+          )
+        ],
+      ),
+    ),
 
           //Search
           Padding(
@@ -98,125 +231,129 @@ class _HomePageState extends State<HomePageBuyer> {
           const Padding(padding: EdgeInsets.symmetric(vertical: 10)),
 
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.only(
-                        top: 1, left: 5, right: 5, bottom: 1),
-                    decoration: BoxDecoration(
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      padding: const EdgeInsets.only(
+                          top: 1, left: 5, right: 5, bottom: 1),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.8),
+                              spreadRadius: 2,
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            )
+                          ]),
+                      child: Material(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.8),
-                            spreadRadius: 2,
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          )
-                        ]),
-                    child: Material(
-                      color: Colors.white,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const MapPage(),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MapPage(),
+                              ),
+                            );
+                          },
+                          style: ButtonStyle(
+                            shape:
+                            WidgetStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(
+                                    color: Colors.green), // Optional border side
+                              ),
                             ),
-                          );
-                        },
-                        style: ButtonStyle(
-                          shape:
-                          WidgetStateProperty.all<RoundedRectangleBorder>(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              side: const BorderSide(
-                                  color: Colors.green), // Optional border side
-                            ),
+                            overlayColor: WidgetStateColor.resolveWith((states) =>
+                                Colors.green.withOpacity(0.2)), // Splash color
                           ),
-                          overlayColor: WidgetStateColor.resolveWith((states) =>
-                              Colors.green.withOpacity(0.2)), // Splash color
-                        ),
-                        child: const Column(
-                          children: [
-                            Image(
-                              image: AssetImage(
-                                  'assets/images/buyer_homepage/location.jpg'),
-                              height: 140,
-                              width: 125,
-                            ),
-                            Text(
-                              'Random Buy',
-                              style:
-                              TextStyle(fontSize: 20, color: Colors.green),
-                            ),
-                            SizedBox(height: 6),
-                          ],
+                          child: const Column(
+                            children: [
+                              Image(
+                                image: AssetImage(
+                                    'assets/images/buyer_homepage/location.jpg'),
+                                height: 140,
+                                width: 125,
+                              ),
+                              Text(
+                                'Random Buy',
+                                style:
+                                TextStyle(fontSize: 20, color: Colors.green),
+                              ),
+                              SizedBox(height: 6),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
                 const Padding(
-                  padding: EdgeInsets.only(right: 20),
+                  padding: EdgeInsets.only(right: 30),
                 ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.only(
-                        top: 1, left: 5, right: 5, bottom: 1),
-                    decoration: BoxDecoration(
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      padding: const EdgeInsets.only(
+                          top: 1, left: 5, right: 5, bottom: 1),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.8),
+                              spreadRadius: 2,
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            )
+                          ]),
+                      child: Material(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.8),
-                            spreadRadius: 2,
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          )
-                        ]),
-                    child: Material(
-                      color: Colors.white,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CartHomePage(),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CartHomePage(),
+                              ),
+                            );
+                          },
+                          style: ButtonStyle(
+                            shape:
+                            WidgetStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(
+                                    color: Colors.green), // Optional border side
+                              ),
                             ),
-                          );
-                        },
-                        style: ButtonStyle(
-                          shape:
-                          WidgetStateProperty.all<RoundedRectangleBorder>(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              side: const BorderSide(
-                                  color: Colors.green), // Optional border side
-                            ),
+                            overlayColor: WidgetStateColor.resolveWith((states) =>
+                                Colors.green.withOpacity(0.2)), // Splash color
                           ),
-                          overlayColor: WidgetStateColor.resolveWith((states) =>
-                              Colors.green.withOpacity(0.2)), // Splash color
-                        ),
-                        child: const Column(
-                          children: [
-                            Image(
-                              image: AssetImage(
-                                  'assets/images/buyer_homepage/vegetables.jpeg'),
-                              height: 140,
-                              width: 125,
-                            ),
-                            Text(
-                              'My Cart',
-                              style:
-                              TextStyle(fontSize: 20, color: Colors.green),
-                            ),
-                            SizedBox(height: 6),
-                          ],
+                          child: const Column(
+                            children: [
+                              Image(
+                                image: AssetImage(
+                                    'assets/images/buyer_homepage/vegetables.jpeg'),
+                                height: 140,
+                                width: 125,
+                              ),
+                              Text(
+                                'My Cart',
+                                style:
+                                TextStyle(fontSize: 20, color: Colors.green),
+                              ),
+                              SizedBox(height: 6),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -227,125 +364,129 @@ class _HomePageState extends State<HomePageBuyer> {
           ),
 
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 10),
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.only(
-                        top: 1, left: 5, right: 5, bottom: 1),
-                    decoration: BoxDecoration(
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      padding: const EdgeInsets.only(
+                          top: 1, left: 5, right: 5, bottom: 1),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.8),
+                              spreadRadius: 2,
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            )
+                          ]),
+                      child: Material(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.8),
-                            spreadRadius: 2,
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          )
-                        ]),
-                    child: Material(
-                      color: Colors.white,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ViewPaymentsPage(),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ViewPaymentsPage(),
+                              ),
+                            );
+                          },
+                          style: ButtonStyle(
+                            shape:
+                            WidgetStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(
+                                    color: Colors.green), // Optional border side
+                              ),
                             ),
-                          );
-                        },
-                        style: ButtonStyle(
-                          shape:
-                          WidgetStateProperty.all<RoundedRectangleBorder>(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              side: const BorderSide(
-                                  color: Colors.green), // Optional border side
-                            ),
+                            overlayColor: WidgetStateColor.resolveWith((states) =>
+                                Colors.green.withOpacity(0.2)), // Splash color
                           ),
-                          overlayColor: WidgetStateColor.resolveWith((states) =>
-                              Colors.green.withOpacity(0.2)), // Splash color
-                        ),
-                        child: const Column(
-                          children: [
-                            Image(
-                              image: AssetImage(
-                                  'assets/images/buyer_homepage/vegetables.jpeg'),
-                              height: 140,
-                              width: 125,
-                            ),
-                            Text(
-                              'Your orders',
-                              style:
-                              TextStyle(fontSize: 20, color: Colors.green),
-                            ),
-                            SizedBox(height: 6),
-                          ],
+                          child: const Column(
+                            children: [
+                              Image(
+                                image: AssetImage(
+                                    'assets/images/buyer_homepage/vegetables.jpeg'),
+                                height: 140,
+                                width: 125,
+                              ),
+                              Text(
+                                'Your orders',
+                                style:
+                                TextStyle(fontSize: 20, color: Colors.green),
+                              ),
+                              SizedBox(height: 6),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
                 const Padding(
-                  padding: EdgeInsets.only(right: 20),
+                  padding: EdgeInsets.only(right: 30),
                 ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.only(
-                        top: 1, left: 5, right: 5, bottom: 1),
-                    decoration: BoxDecoration(
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      padding: const EdgeInsets.only(
+                          top: 1, left: 5, right: 5, bottom: 1),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.8),
+                              spreadRadius: 2,
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            )
+                          ]),
+                      child: Material(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.8),
-                            spreadRadius: 2,
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          )
-                        ]),
-                    child: Material(
-                      color: Colors.white,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Sample(),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const Sample(),
+                              ),
+                            );
+                          },
+                          style: ButtonStyle(
+                            shape:
+                            WidgetStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(
+                                    color: Colors.green), // Optional border side
+                              ),
                             ),
-                          );
-                        },
-                        style: ButtonStyle(
-                          shape:
-                          WidgetStateProperty.all<RoundedRectangleBorder>(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              side: const BorderSide(
-                                  color: Colors.green), // Optional border side
-                            ),
+                            overlayColor: WidgetStateColor.resolveWith((states) =>
+                                Colors.green.withOpacity(0.2)), // Splash color
                           ),
-                          overlayColor: WidgetStateColor.resolveWith((states) =>
-                              Colors.green.withOpacity(0.2)), // Splash color
-                        ),
-                        child: const Column(
-                          children: [
-                            Image(
-                              image: AssetImage(
-                                  'assets/images/buyer_homepage/vegetables.jpeg'),
-                              height: 140,
-                              width: 125,
-                            ),
-                            Text(
-                              'View orders',
-                              style:
-                              TextStyle(fontSize: 20, color: Colors.green),
-                            ),
-                            SizedBox(height: 6),
-                          ],
+                          child: const Column(
+                            children: [
+                              Image(
+                                image: AssetImage(
+                                    'assets/images/buyer_homepage/vegetables.jpeg'),
+                                height: 140,
+                                width: 125,
+                              ),
+                              Text(
+                                'View orders',
+                                style:
+                                TextStyle(fontSize: 20, color: Colors.green),
+                              ),
+                              SizedBox(height: 6),
+                            ],
+                          ),
                         ),
                       ),
                     ),

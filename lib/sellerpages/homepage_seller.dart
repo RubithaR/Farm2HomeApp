@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:veg/login_pages/login.dart';
 import 'package:veg/sellerpages/add_item_page.dart';
+import 'package:veg/sellerpages/editprofilepage.dart';
 import 'package:veg/sellerpages/history_seller/old_orders_seller.dart';
 import 'package:veg/sellerpages/map/seller_location.dart';
 import 'package:veg/sellerpages/startjourney/startjourney.dart';
@@ -63,13 +65,37 @@ class _HomePageSellerState extends State<HomePageSeller> {
           ? AppBar(
         title: const Text('Home'),
         backgroundColor: Colors.green,
-
         actions: [
-          IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              // Add your navigation logic here
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'Edit Profile') {
+                // Navigate to the Edit Profile page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Editprofilepage(sellerId: sellerId ?? ''),
+                  ),
+                );
+
+              } else if (value == 'Logout') {
+                // Log out the user
+                FirebaseAuth.instance.signOut().then((_) {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => LogInScreen()));
+                });
+              }
             },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'Edit Profile',
+                child: Text('Edit Profile'),
+              ),
+              const PopupMenuItem(
+                value: 'Logout',
+                child: Text('Logout'),
+              ),
+            ],
+            icon: const Icon(Icons.menu),
           ),
         ],
       )
@@ -200,8 +226,8 @@ class _HomePageSellerState extends State<HomePageSeller> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 350, // Double width
-                height: 130, // Same height
+                width: MediaQuery.of(context).size.width*0.8 ,// Double width
+                height: MediaQuery.of(context).size.height*0.15, // Same height
                 decoration: BoxDecoration(
                   color: Colors.greenAccent,
                   borderRadius: BorderRadius.circular(10),

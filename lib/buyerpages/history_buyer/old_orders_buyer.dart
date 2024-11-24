@@ -258,8 +258,8 @@ class CartItem {
   factory CartItem.fromMap(Map<String, dynamic> map) {
     return CartItem(
       vegetableName: map['name_veg'] as String,
-      quantity: map['quantity'] as int,
-      totalPrice: (map['total_price'] as num).toDouble(),
+      quantity: (map['quantity'] as num).toInt(), // Safely cast to int
+      totalPrice: (map['total_price'] as num).toDouble(), // Safely cast to double
     );
   }
 }
