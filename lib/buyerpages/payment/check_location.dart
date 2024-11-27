@@ -50,7 +50,7 @@ class _CheckLocationState extends State<CheckLocation> {
     if (uid != null) {
       DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(uid!);
       DatabaseEvent event = await userRef.once();
-      
+
       if (event.snapshot.exists) {
         Map<dynamic, dynamic>? userData = event.snapshot.value as Map<dynamic, dynamic>?;
 
@@ -70,7 +70,7 @@ class _CheckLocationState extends State<CheckLocation> {
       } else {
         _getCurrentLocation();
       }
-     
+
     }
   }
 
@@ -169,6 +169,10 @@ class _CheckLocationState extends State<CheckLocation> {
 
     return GestureDetector(
       child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Live Order Tracking"),
+          backgroundColor: Colors.blue,
+        ),
         body: _locationFetched
             ? GoogleMap(
           initialCameraPosition: CameraPosition(

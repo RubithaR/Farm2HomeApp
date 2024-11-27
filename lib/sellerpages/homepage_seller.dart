@@ -80,10 +80,22 @@ class _HomePageSellerState extends State<HomePageSeller> {
               } else if (value == 'Logout') {
                 // Log out the user
                 FirebaseAuth.instance.signOut().then((_) {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => LogInScreen()));
+                  setState(() {
+                    sellerId = null; // Clear the sellerId
+                  });
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => LogInScreen()),
+                        (Route<dynamic> route) => false, // Remove all previous routes
+                  );
+                }).catchError((error) {
+                  // Handle any logout error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Logout failed: $error')),
+                  );
                 });
               }
+
             },
             itemBuilder: (context) => [
               const PopupMenuItem(

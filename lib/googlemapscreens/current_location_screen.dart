@@ -163,6 +163,10 @@ class MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Map"),
+        backgroundColor: Colors.green,
+      ),
       body: _locationFetched
           ? GoogleMap(
         initialCameraPosition: CameraPosition(

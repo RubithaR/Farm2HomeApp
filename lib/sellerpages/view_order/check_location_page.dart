@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math'; // Add this import for math functions like cos, asin, sqrt, and pi
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -15,13 +17,16 @@ class CheckLocationSeller extends StatefulWidget {
   @override
   State<CheckLocationSeller> createState() => _CheckLocationSellerState();
 }
+
 class _CheckLocationSellerState extends State<CheckLocationSeller> {
-  LatLng _currentLocation = const LatLng(0.0, 0.0); // Buyer's current location
+  LatLng _currentLocation = const LatLng(0.0, 0.0); // Seller's current location
   bool _locationFetched = false;
+  bool _isMoving = false; // Track if the marker is moving
   String? uid;
   GoogleMapController? mapController;
   BitmapDescriptor? buyerIcon; // Buyer icon
   List<LatLng> _routeCoordinates = []; // List to store route coordinates
+  late Timer _timer; // Timer for animating the marker
 
   String mapKey = "AIzaSyA9GskZpUFgljTermxTw-HVE3O6g_GtlIc"; // Replace with your Google Maps API key
 
@@ -30,7 +35,6 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
     super.initState();
     _loadBuyerIcon(); // Load the custom icon
     _getUserLocationFromDatabase().then((_) {
-      // Fetch the route once buyer's location is fetched
       if (_locationFetched) {
         getPolylinePoints();
       }
@@ -53,7 +57,6 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
       DatabaseReference userRef = FirebaseDatabase.instance.ref().child("Users").child(uid!);
       DatabaseEvent event = await userRef.once();
 
-
       if (event.snapshot.exists) {
         Map<dynamic, dynamic>? userData = event.snapshot.value as Map<dynamic, dynamic>?;
 
@@ -71,9 +74,7 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
         }
       } else {
         _getCurrentLocation(); // If no user data, get current location
-
       }
-
     }
   }
 
@@ -121,7 +122,6 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
           'longitude': newLocation.longitude,
         }
       });
-      // Fetch the new polyline points based on the updated location
       setState(() {
         _currentLocation = newLocation;
       });
@@ -131,22 +131,81 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
     }
   }
 
+  // Animate the marker to the buyer's location
+  void _moveMarkerToBuyer() {
+    if (_routeCoordinates.isEmpty) return;
+
+    // Start the animation from the first point in the route
+    int currentPointIndex = 0;
+
+    _timer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+      // If we've reached the last point in the polyline, stop the timer
+      if (currentPointIndex >= _routeCoordinates.length) {
+        _timer.cancel();
+        setState(() {
+          _isMoving = false;
+        });
+        return;
+      }
+
+      // Move the marker a little closer to the next polyline point
+      LatLng nextPoint = _routeCoordinates[currentPointIndex];
+      _currentLocation = _getIntermediatePosition(_currentLocation, nextPoint, 0.1); // Increased step size
+
+      // Check if we are close enough to the next point to increment the index
+      if (_distance(_currentLocation, nextPoint) < 0.001) {
+        currentPointIndex++;
+      }
+
+      // Add the current position to the polyline list to update it
+      _routeCoordinates.add(_currentLocation);
+
+      // Update the state to rebuild the map and polyline
+      setState(() {});
+    });
+  }
+
+
+
+  // Calculate an intermediate position between two LatLng points
+  LatLng _getIntermediatePosition(LatLng start, LatLng end, double ratio) {
+    double lat = start.latitude + (end.latitude - start.latitude) * ratio;
+    double lng = start.longitude + (end.longitude - start.longitude) * ratio;
+    return LatLng(lat, lng);
+  }
+
+  // Calculate distance between two LatLng points
+  double _distance(LatLng point1, LatLng point2) {
+    const double earthRadius = 6371; // Earth's radius in km
+    double dLat = _degreesToRadians(point2.latitude - point1.latitude);
+    double dLng = _degreesToRadians(point2.longitude - point1.longitude);
+    double a =
+        0.5 - (cos(dLat) / 2) +
+            cos(_degreesToRadians(point1.latitude)) * cos(_degreesToRadians(point2.latitude)) *
+                (1 - cos(dLng)) / 2;
+    return earthRadius * 2 * asin(sqrt(a));
+  }
+
+  // Convert degrees to radians
+  double _degreesToRadians(double degrees) {
+    return degrees * (pi / 180); // Use 'pi' from dart:math
+  }
+
   Future<void> getPolylinePoints() async {
     PolylinePoints polylinePoints = PolylinePoints();
 
     // buyer's location
-    LatLng sellerLocation = LatLng(widget.latitude, widget.longitude);
+    LatLng buyerLocation = LatLng(widget.latitude, widget.longitude);
 
     // Fetch route between buyer and seller using PolylineRequest
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-      googleApiKey: "AIzaSyA9GskZpUFgljTermxTw-HVE3O6g_GtlIc", // Replace with your Google Maps API key
+      googleApiKey: mapKey, // Replace with your Google Maps API key
       request: PolylineRequest(
         origin: PointLatLng(_currentLocation.latitude, _currentLocation.longitude), // seller's location
-        destination: PointLatLng(sellerLocation.latitude, sellerLocation.longitude), // buyer's location
+        destination: PointLatLng(buyerLocation.latitude, buyerLocation.longitude), // buyer's location
         mode: TravelMode.driving, // Specify travel mode
       ),
     );
-
 
     if (result.points.isNotEmpty) {
       _routeCoordinates.clear(); // Clear previous coordinates
@@ -154,25 +213,24 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
         _routeCoordinates.add(LatLng(point.latitude, point.longitude));
       }
       setState(() {
-
         // Automatically adjust the camera to fit the route
-        _moveCameraToBounds(sellerLocation);
-      }); // Update the map with the new route
+        _moveCameraToBounds(buyerLocation);
+      });
     } else {
       print("Error fetching polyline: ${result.errorMessage}");
     }
   }
 
   // Move the camera to fit the route bounds
-  void _moveCameraToBounds(LatLng sellerLocation) {
+  void _moveCameraToBounds(LatLng buyerLocation) {
     LatLngBounds bounds = LatLngBounds(
       southwest: LatLng(
-        _currentLocation.latitude < sellerLocation.latitude ? _currentLocation.latitude : sellerLocation.latitude,
-        _currentLocation.longitude < sellerLocation.longitude ? _currentLocation.longitude : sellerLocation.longitude,
+        _currentLocation.latitude < buyerLocation.latitude ? _currentLocation.latitude : buyerLocation.latitude,
+        _currentLocation.longitude < buyerLocation.longitude ? _currentLocation.longitude : buyerLocation.longitude,
       ),
       northeast: LatLng(
-        _currentLocation.latitude > sellerLocation.latitude ? _currentLocation.latitude : sellerLocation.latitude,
-        _currentLocation.longitude > sellerLocation.longitude ? _currentLocation.longitude : sellerLocation.longitude,
+        _currentLocation.latitude > buyerLocation.latitude ? _currentLocation.latitude : buyerLocation.latitude,
+        _currentLocation.longitude > buyerLocation.longitude ? _currentLocation.longitude : buyerLocation.longitude,
       ),
     );
 
@@ -182,58 +240,62 @@ class _CheckLocationSellerState extends State<CheckLocationSeller> {
   // Display the map with the buyer's and seller's locations
   @override
   Widget build(BuildContext context) {
-    // buyer's location from navigation arguments
-    LatLng sellerLocation = LatLng(widget.latitude, widget.longitude);
+    LatLng buyerLocation = LatLng(widget.latitude, widget.longitude);
 
     return GestureDetector(
       child: Scaffold(
-        body: _locationFetched
-            ? GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: _currentLocation,
-            zoom: 14,
-          ),
-          markers: {
-            // seller's location marker
-            Marker(
-              markerId: const MarkerId('sellerLocation'),
-              position: _currentLocation,
-              draggable: true, // Allow dragging to update location
-              onDragEnd: (newPosition) {
-                _updateLocationInFirebase(newPosition); // Update the new location in Firebase
+        appBar: AppBar(
+          title: const Text("Live Order Tracking"),
+          backgroundColor: Colors.blue,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: _currentLocation,
+                  zoom: 14.0,
+                ),
+                markers: {
+                  Marker(
+                    markerId: const MarkerId("buyer"),
+                    position: buyerLocation,
+                    icon: buyerIcon ?? BitmapDescriptor.defaultMarker,
+                    infoWindow: InfoWindow(title: widget.buyerName),
+                  ),
+                  Marker(
+                    markerId: const MarkerId("seller"),
+                    position: _currentLocation,
+                    infoWindow: InfoWindow(title: "Seller's Location"),
+                  ),
+                },
+                polylines: {
+                  Polyline(
+                    polylineId: const PolylineId("route"),
+                    points: _routeCoordinates,
+                    color: Colors.blue,
+                    width: 5,
+                  ),
+                },
+                onMapCreated: (controller) {
+                  mapController = controller;
+                },
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (!_isMoving) {
+                  setState(() {
+                    _isMoving = true;
+                  });
+                  _moveMarkerToBuyer(); // Start the animation
+                }
               },
-              infoWindow: const InfoWindow(title: 'Your location'),
+              child: Text(_isMoving ? "Moving..." : "Start Moving"),
             ),
-            // Seller's location marker with custom image
-            Marker(
-              markerId: const MarkerId('buyerLocation'),
-              position: sellerLocation,
-              icon: buyerIcon ?? BitmapDescriptor.defaultMarker, // Use your custom image or a default if not loaded
-              infoWindow: InfoWindow(title: widget.buyerName),
-            ),
-          },
-          polylines: {
-            Polyline(
-              polylineId: const PolylineId('route'),
-              points: _routeCoordinates,
-              color: Colors.blue,
-              width: 5,
-            ),
-          },
-      
-          onMapCreated: (GoogleMapController controller) {
-            mapController = controller;
-          },
-          onTap: (LatLng tappedLocation) {
-            setState(() {
-              _currentLocation = tappedLocation;
-            });
-            _updateLocationInFirebase(tappedLocation); // Update location when map is tapped
-          },
-        )
-            : const Center(child: CircularProgressIndicator()), // Show a spinner while fetching location
+          ],
+        ),
       ),
     );
   }
 }
-
